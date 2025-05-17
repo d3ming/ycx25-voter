@@ -6,7 +6,12 @@ import pandas as pd
 import os
 from typing import List, Dict, Any, Optional
 import json
+import re
 from pydantic import BaseModel
+from sqlalchemy.orm import Session
+
+# Import database functionality
+from database import get_db, Company as DBCompany, create_tables, initialize_db
 
 app = FastAPI(title="YC X25 Batch Explorer")
 
@@ -17,7 +22,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 # Model for company data
-class Company(BaseModel):
+class CompanyModel(BaseModel):
     name: str
     description: str
     website: str
@@ -28,22 +33,13 @@ class Company(BaseModel):
     location: str
     company_linkedin: Optional[str] = None
 
-# Global data store
-DATA_FILE = "data/companies.json"
+# CSV data file path
 ORIGINAL_CSV = "attached_assets/yc_companies_S25.csv"
 
-# Function to load and process data
-def load_and_process_data():
-    """Process YC companies data from CSV and return as list of Company objects"""
-    os.makedirs("data", exist_ok=True)
-    
-    # Check if processed data already exists
-    if os.path.exists(DATA_FILE):
-        with open(DATA_FILE, "r") as f:
-            companies_data = json.load(f)
-            return companies_data
-    
-    # Otherwise process from CSV
+# Function to load and process data from CSV
+def process_csv_data():
+    """Process YC companies data from CSV file"""
+    # Process from CSV
     df = pd.read_csv(ORIGINAL_CSV)
     
     # Get unique companies
@@ -96,7 +92,6 @@ def load_and_process_data():
         if isinstance(founder_name, str) and founder_name == company_name and 'linkedin.com/company' in founder_linkedin:
             companies[company_name]['company_linkedin'] = founder_linkedin
     
-    import re
     # Extract location and founding year from description
     for company_name, company in companies.items():
         # Parse founded year
@@ -111,68 +106,89 @@ def load_and_process_data():
         company['short_description'] = company['description'].split('.')[0] + '.'
     
     # Convert to list of companies
-    companies_list = list(companies.values())
-    
-    # Save processed data
-    with open(DATA_FILE, "w") as f:
-        json.dump(companies_list, f)
-    
-    return companies_list
+    return list(companies.values())
 
-# Data dependency
-def get_companies():
-    """Dependency to get company data"""
-    return load_and_process_data()
+# Get all companies from database
+def get_companies_from_db(db: Session):
+    """Get all companies from database"""
+    companies = db.query(DBCompany).all()
+    return [company.to_dict() for company in companies]
+
+# Get company by name
+def get_company_by_name(db: Session, name: str):
+    """Get a company by name"""
+    return db.query(DBCompany).filter(DBCompany.name == name).first()
+
+# Database setup at startup
+@app.on_event("startup")
+async def startup_event():
+    """Initialize database on startup"""
+    # Create database tables
+    create_tables()
+    
+    # Process CSV data
+    companies_data = process_csv_data()
+    
+    # Initialize database with company data
+    initialize_db(companies_data)
 
 @app.get("/")
-async def home(request: Request, companies: List[Dict] = Depends(get_companies)):
-    # Sort companies by rank (highest first)
+async def home(request: Request, db: Session = Depends(get_db)):
+    # Get companies from database
+    companies = get_companies_from_db(db)
+    
+    # Sort companies by votes (highest first)
     sorted_companies = sorted(companies, key=lambda x: x['rank'], reverse=True)
+    
     return templates.TemplateResponse(
         "index.html", 
         {"request": request, "companies": sorted_companies}
     )
 
 @app.post("/update_rank/{company_name}")
-async def update_rank(company_name: str, rank: int = Form(...), companies: List[Dict] = Depends(get_companies)):
+async def update_rank(
+    company_name: str, 
+    rank: int = Form(...), 
+    db: Session = Depends(get_db)
+):
     """Update votes for a company"""
-    # Find the company and update its rank
-    for company in companies:
-        if company['name'] == company_name:
-            company['rank'] = rank
-            break
+    # Find the company in the database
+    company = get_company_by_name(db, company_name)
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
     
-    # Save updates
-    with open(DATA_FILE, "w") as f:
-        json.dump(companies, f)
+    # Update votes
+    setattr(company, 'votes', rank)
+    db.commit()
     
     return RedirectResponse(url="/", status_code=303)
 
 @app.post("/upvote/{company_name}")
-async def upvote(company_name: str, companies: List[Dict] = Depends(get_companies)):
-    # Find the company and increment its rank
-    for company in companies:
-        if company['name'] == company_name:
-            company['rank'] += 1
-            break
+async def upvote(company_name: str, db: Session = Depends(get_db)):
+    """Upvote a company"""
+    # Find the company in the database
+    company = get_company_by_name(db, company_name)
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
     
-    # Save updates
-    with open(DATA_FILE, "w") as f:
-        json.dump(companies, f)
+    # Increment votes
+    current_votes = company.votes if company.votes is not None else 0
+    setattr(company, 'votes', current_votes + 1)
+    db.commit()
     
     return RedirectResponse(url="/", status_code=303)
 
 @app.post("/downvote/{company_name}")
-async def downvote(company_name: str, companies: List[Dict] = Depends(get_companies)):
-    # Find the company and decrement its rank
-    for company in companies:
-        if company['name'] == company_name:
-            company['rank'] -= 1
-            break
+async def downvote(company_name: str, db: Session = Depends(get_db)):
+    """Downvote a company"""
+    # Find the company in the database
+    company = get_company_by_name(db, company_name)
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
     
-    # Save updates
-    with open(DATA_FILE, "w") as f:
-        json.dump(companies, f)
+    # Decrement votes
+    company.votes -= 1
+    db.commit()
     
     return RedirectResponse(url="/", status_code=303)
 
