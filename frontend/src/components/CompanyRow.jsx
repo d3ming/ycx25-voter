@@ -45,7 +45,9 @@ const CompanyRow = ({ company, companies, setCompanies }) => {
       const formData = new FormData()
       formData.append('rank', voteValue)
 
-      const response = await fetch(`/update_rank/${company.name}`, {
+      console.log(`Submitting vote to endpoint: /update_rank/${company.id} for company: ${company.name} (ID: ${company.id})`)
+
+      const response = await fetch(`/update_rank/${company.id}`, {
         method: 'POST',
         headers: {
           'Accept': 'application/json'
