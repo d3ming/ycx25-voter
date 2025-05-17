@@ -97,11 +97,13 @@ const CompanyRow = ({ company, companies, setCompanies }) => {
       
       if (response.ok) {
         const data = await response.json()
+        console.log('Vote response data:', data)
         
         // Update companies state to reflect the new vote count
+        // Use company id for reliable comparison
         setCompanies(prevCompanies => 
           prevCompanies.map(c => 
-            c.name === company.name ? { ...c, votes: data.votes } : c
+            c.id === data.id ? { ...c, votes: data.votes } : c
           ).sort((a, b) => b.votes - a.votes)
         )
         
