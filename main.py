@@ -150,6 +150,11 @@ def get_company_by_name(db: Session, name: str):
     """Get a company by name"""
     return db.query(DBCompany).filter(DBCompany.name == name).first()
 
+# Get company by ID
+def get_company_by_id(db: Session, company_id: int):
+    """Get a company by ID"""
+    return db.query(DBCompany).filter(DBCompany.id == company_id).first()
+
 # Database setup at startup
 @app.on_event("startup")
 async def startup_event():
@@ -195,16 +200,16 @@ async def home(request: Request, db: Session = Depends(get_db)):
         {"request": request, "companies": sorted_companies}
     )
 
-@app.post("/update_rank/{company_name}")
+@app.post("/update_rank/{company_id}")
 async def update_rank(
     request: Request,
-    company_name: str, 
+    company_id: int, 
     rank: int = Form(...), 
     db: Session = Depends(get_db)
 ):
     """Update votes for a company"""
     # Find the company in the database
-    company = get_company_by_name(db, company_name)
+    company = get_company_by_id(db, company_id)
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
     
@@ -219,16 +224,17 @@ async def update_rank(
         return JSONResponse({
             "success": True,
             "votes": company.votes,
-            "company": company_name
+            "id": company.id,
+            "name": company.name
         })
     else:
         return RedirectResponse(url="/", status_code=303)
 
-@app.post("/upvote/{company_name}")
-async def upvote(request: Request, company_name: str, db: Session = Depends(get_db)):
+@app.post("/upvote/{company_id}")
+async def upvote(request: Request, company_id: int, db: Session = Depends(get_db)):
     """Upvote a company"""
     # Find the company in the database
-    company = get_company_by_name(db, company_name)
+    company = get_company_by_id(db, company_id)
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
     
@@ -244,16 +250,17 @@ async def upvote(request: Request, company_name: str, db: Session = Depends(get_
         return JSONResponse({
             "success": True,
             "votes": company.votes,
-            "company": company_name
+            "id": company.id,
+            "name": company.name
         })
     else:
         return RedirectResponse(url="/", status_code=303)
 
-@app.post("/downvote/{company_name}")
-async def downvote(request: Request, company_name: str, db: Session = Depends(get_db)):
+@app.post("/downvote/{company_id}")
+async def downvote(request: Request, company_id: int, db: Session = Depends(get_db)):
     """Downvote a company"""
     # Find the company in the database
-    company = get_company_by_name(db, company_name)
+    company = get_company_by_id(db, company_id)
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
     
@@ -269,7 +276,8 @@ async def downvote(request: Request, company_name: str, db: Session = Depends(ge
         return JSONResponse({
             "success": True,
             "votes": company.votes,
-            "company": company_name
+            "id": company.id,
+            "name": company.name
         })
     else:
         return RedirectResponse(url="/", status_code=303)
