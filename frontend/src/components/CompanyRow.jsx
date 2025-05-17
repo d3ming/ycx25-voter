@@ -3,7 +3,7 @@ import { ArrowUpIcon, ArrowDownIcon } from '@heroicons/react/24/solid'
 
 const CompanyRow = ({ company, companies, setCompanies }) => {
   const [showVoteInput, setShowVoteInput] = useState(false)
-  const [voteValue, setVoteValue] = useState(company.votes)
+  const [voteValue, setVoteValue] = useState(company.votes || company.rank || 0)
   const [isUpdating, setIsUpdating] = useState(false)
   const [hasFlashEffect, setHasFlashEffect] = useState(false)
   const inputRef = useRef(null)

@@ -31,6 +31,26 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 # Set up templates
 templates = Jinja2Templates(directory="templates")
 
+# Add route for serving the React app (for production)
+@app.get("/react", response_class=HTMLResponse)
+async def react_app(request: Request):
+    return """
+    <!DOCTYPE html>
+    <html lang="en" class="dark">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+      <title>YC X25 Batch Explorer</title>
+      <script type="module" crossorigin src="/static/react/assets/index-123456.js"></script>
+      <link rel="stylesheet" href="/static/react/assets/index-123456.css">
+    </head>
+    <body class="bg-dark-bg text-gray-200 dark">
+      <div id="root"></div>
+    </body>
+    </html>
+    """
+
 # Model for company data
 class CompanyModel(BaseModel):
     name: str
