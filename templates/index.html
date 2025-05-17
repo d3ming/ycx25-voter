@@ -112,6 +112,27 @@
                 <span class="ml-2">Sorted by votes</span>
             </div>
         </div>
+        <div class="max-w-7xl mx-auto px-4 py-2 sm:px-6 lg:px-8">
+            <div class="flex flex-wrap items-center gap-2">
+                <div class="relative flex-grow max-w-md">
+                    <input 
+                        type="text" 
+                        id="search-filter" 
+                        placeholder="Search by company or founder name..." 
+                        class="w-full bg-dark-accent text-gray-200 border border-dark-border rounded-md py-2 pl-10 pr-4 focus:outline-none focus:ring-1 focus:ring-accent-blue"
+                        oninput="filterCompanies()"
+                    >
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-gray-400"></i>
+                    </div>
+                </div>
+                <div class="flex items-center">
+                    <span id="filter-count" class="text-sm text-gray-400 ml-2">
+                        Showing all companies
+                    </span>
+                </div>
+            </div>
+        </div>
     </header>
 
     <main class="max-w-7xl mx-auto px-2 sm:px-6 lg:px-8 py-4">
