@@ -1,7 +1,8 @@
 from fastapi import FastAPI, Request, Form, Depends, HTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import RedirectResponse, JSONResponse
+from fastapi.responses import RedirectResponse, JSONResponse, HTMLResponse
+from fastapi.middleware.cors import CORSMiddleware
 import pandas as pd
 import os
 from typing import List, Dict, Any, Optional
@@ -14,6 +15,15 @@ from sqlalchemy.orm import Session
 from database import get_db, Company as DBCompany, create_tables, initialize_db
 
 app = FastAPI(title="YC X25 Batch Explorer")
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
+)
 
 # Mount static directory
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -131,6 +141,17 @@ async def startup_event():
     
     # Initialize database with company data
     initialize_db(companies_data)
+
+@app.get("/api/companies")
+async def get_companies(db: Session = Depends(get_db)):
+    """Get all companies as JSON for the React frontend"""
+    # Get companies from database
+    companies = get_companies_from_db(db)
+    
+    # Sort companies by votes (highest first)
+    sorted_companies = sorted(companies, key=lambda x: x['rank'], reverse=True)
+    
+    return sorted_companies
 
 @app.get("/")
 async def home(request: Request, db: Session = Depends(get_db)):
