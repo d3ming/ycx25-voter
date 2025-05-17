@@ -13,20 +13,18 @@ function App() {
     // Fetch companies when component mounts
     const fetchCompanies = async () => {
       try {
-        // Get the current hostname from window.location
-        const hostname = window.location.hostname;
-        // For Replit, use the correct port
-        const API_URL = `http://${hostname}:5000`;
+        // In Replit, we need to use a relative path
+        // This will use the same origin as the React app is served from
+        const API_URL = '/api/companies';
         
         console.log('Fetching from API URL:', API_URL);
         
-        const response = await fetch(`${API_URL}/api/companies`, {
+        const response = await fetch(API_URL, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
             'Accept': 'application/json'
-          },
-          mode: 'cors'
+          }
         })
         
         if (!response.ok) {

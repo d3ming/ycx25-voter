@@ -172,7 +172,15 @@ async def get_companies(db: Session = Depends(get_db)):
     # Sort companies by votes (highest first)
     sorted_companies = sorted(companies, key=lambda x: x['rank'], reverse=True)
     
-    return sorted_companies
+    # Add CORS headers
+    return JSONResponse(
+        content=sorted_companies,
+        headers={
+            "Access-Control-Allow-Origin": "*",
+            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
+            "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        }
+    )
 
 @app.get("/")
 async def home(request: Request, db: Session = Depends(get_db)):
