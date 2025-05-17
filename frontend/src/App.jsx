@@ -14,6 +14,7 @@ function App() {
     // Fetch companies when component mounts
     const fetchCompanies = async () => {
       try {
+        // Use the relative URL which will be handled by the proxy
         const response = await fetch('/api/companies')
         
         if (!response.ok) {
