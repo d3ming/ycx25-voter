@@ -30,7 +30,14 @@ class Company(Base):
     def to_dict(self):
         """Convert company to dictionary for API responses"""
         try:
-            founders = json.loads(self.founders) if self.founders else []
+            if self.founders:
+                founders_str = str(self.founders)
+                if founders_str.startswith('[') and founders_str.endswith(']'):
+                    founders = json.loads(founders_str)
+                else:
+                    founders = []
+            else:
+                founders = []
         except:
             founders = []
             

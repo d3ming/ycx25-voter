@@ -187,7 +187,8 @@ async def downvote(company_name: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Company not found")
     
     # Decrement votes
-    company.votes -= 1
+    current_votes = company.votes if company.votes is not None else 0
+    setattr(company, 'votes', current_votes - 1)
     db.commit()
     
     return RedirectResponse(url="/", status_code=303)
