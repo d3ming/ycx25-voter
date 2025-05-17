@@ -33,7 +33,7 @@ def main():
     
     # Stock image for investor
     st.sidebar.image("https://pixabay.com/get/g67f78b776d5c6e42a9eabd67661ca5984755721a629d470cd73d8ab93a4de4ed8044fccb5c901bf5aa33dee02a612bd20c4af5a0cb35cfd67db5b62c09ded559_1280.jpg", 
-                     caption="Angel Investment Portfolio", use_column_width=True)
+                     caption="Angel Investment Portfolio", use_container_width=True)
     
     # Statistics
     stats = get_company_stats()
@@ -96,7 +96,7 @@ def main():
     
     for i, col in enumerate(founder_cols):
         with col:
-            st.image(founder_images[i], width=150)
+            st.image(founder_images[i], width=150, use_container_width=False)
             if i == 0:
                 st.caption("Serial Entrepreneurs Building Next-Gen Tech")
             elif i == 1:
@@ -120,10 +120,10 @@ def main():
         col1, col2 = st.columns([1, 1])
         with col1:
             st.image("https://pixabay.com/get/g588f01a7a1bf02403bd308c8eb757cc4b429871dd1eea916441be238cff44adf967dcbaddbd83c4ec84247055482608e4219b7f59977c114fc8b53b78e5941d0_1280.jpg", 
-                     caption="Startup Office Environment", use_column_width=True)
+                     caption="Startup Office Environment", use_container_width=True)
         with col2:
             st.image("https://pixabay.com/get/gfd075e42e83d8f72a701927f52213a2278e3263bd64c3402bc7c51744b88b43be7359a8615abe0f2b2508a55efea251dcdea17982c046480cc8ba4decfcd5972_1280.jpg", 
-                     caption="Innovation Workspace", use_column_width=True)
+                     caption="Innovation Workspace", use_container_width=True)
         
         # Display each company as a card
         for company in filtered_companies:
