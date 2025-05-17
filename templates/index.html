@@ -25,6 +25,33 @@
             }
         }
     </script>
+    <script>
+        // Show the input field and hide the display span
+        function showRankInput(companyId) {
+            const displayElem = document.getElementById('rankDisplay' + companyId);
+            const formElem = document.getElementById('rankForm' + companyId);
+            const inputElem = document.getElementById('rankInput' + companyId);
+            
+            displayElem.classList.add('hidden');
+            formElem.classList.remove('hidden');
+            inputElem.focus();
+            inputElem.select(); // Select all text for easy replacement
+        }
+        
+        // Submit the form when input loses focus
+        function submitRankForm(companyId) {
+            const formElem = document.getElementById('rankForm' + companyId);
+            formElem.submit();
+        }
+        
+        // Handle Enter key press to submit form
+        function handleEnterKey(event, companyId) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                submitRankForm(companyId);
+            }
+        }
+    </script>
     <style>
         .company-row:hover {
             background-color: #2d2d2d;
@@ -104,8 +131,13 @@
                         <tr class="company-row transition duration-150 ease-in-out">
                             <td class="px-3 py-3 whitespace-nowrap">
                                 <div class="flex items-center space-x-2">
-                                    <span class="font-semibold text-xl text-gray-200">{{ company.rank }}</span>
-                                    <div class="flex flex-col space-y-1">
+                                    <div class="flex items-center">
+                                        <form id="rankForm{{ company.name | replace(' ', '') }}" action="/update_rank/{{ company.name }}" method="post" class="hidden">
+                                            <input type="number" id="rankInput{{ company.name | replace(' ', '') }}" name="rank" class="rank-input w-16 text-sm px-2 py-1 bg-dark-accent text-gray-200 border border-accent-blue rounded-md focus:outline-none focus:ring-1 focus:ring-accent-blue" value="{{ company.rank }}" onblur="submitRankForm('{{ company.name | replace(' ', '') }}')" onkeydown="handleEnterKey(event, '{{ company.name | replace(' ', '') }}')">
+                                        </form>
+                                        <span id="rankDisplay{{ company.name | replace(' ', '') }}" class="font-semibold text-xl text-gray-200 cursor-pointer hover:text-accent-blue transition-colors duration-200" onclick="showRankInput('{{ company.name | replace(' ', '') }}')">{{ company.rank }}</span>
+                                    </div>
+                                    <div class="flex flex-col space-y-1 ml-2">
                                         <form action="/upvote/{{ company.name }}" method="post" class="inline">
                                             <button type="submit" class="text-gray-400 hover:text-accent-green focus:outline-none transition-colors duration-200" title="Upvote">
                                                 <i class="fas fa-arrow-up text-sm"></i>
@@ -117,10 +149,6 @@
                                             </button>
                                         </form>
                                     </div>
-                                    <form action="/update_rank/{{ company.name }}" method="post" class="rank-form bg-dark-bg rounded-md overflow-hidden flex border border-dark-border">
-                                        <input type="number" name="rank" class="rank-input text-xs bg-dark-bg text-gray-200 border-none focus:outline-none px-2 py-1" value="{{ company.rank }}">
-                                        <button type="submit" class="text-xs text-accent-blue hover:bg-accent-blue hover:text-white px-2 transition-colors duration-200">Set</button>
-                                    </form>
                                 </div>
                             </td>
                             <td class="px-3 py-3 whitespace-nowrap">
