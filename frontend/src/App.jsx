@@ -36,6 +36,7 @@ function App() {
         
         // Process the data
         const formattedCompanies = data.map(company => ({
+          id: company.id,  // Important: Pass the database ID for operations
           name: company.name,
           votes: company.votes || company.rank || 0,
           rank: company.rank || company.votes || 0,
@@ -43,8 +44,6 @@ function App() {
           description: company.description,
           short_description: company.short_description || company.description,
           founders: company.founders || [],
-          companyId: company.name.replace(/\s+/g, ''),
-          website_url: company.website,
           company_linkedin: company.company_linkedin,
           founded_year: company.founded_year,
           location: company.location
