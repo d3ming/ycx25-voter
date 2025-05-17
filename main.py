@@ -58,7 +58,7 @@ def load_and_process_data():
                 'website': row['Company Website'],
                 'founders': [],
                 'company_linkedin': None,
-                'rank': 0  # Initial rank is 0
+                'rank': 0  # Initial votes count is 0
             }
         
         # Process founder data
@@ -135,6 +135,7 @@ async def home(request: Request, companies: List[Dict] = Depends(get_companies))
 
 @app.post("/update_rank/{company_name}")
 async def update_rank(company_name: str, rank: int = Form(...), companies: List[Dict] = Depends(get_companies)):
+    """Update votes for a company"""
     # Find the company and update its rank
     for company in companies:
         if company['name'] == company_name:
