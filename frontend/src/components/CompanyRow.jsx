@@ -79,7 +79,11 @@ const CompanyRow = ({ company, companies, setCompanies }) => {
   const handleVote = async (voteType) => {
     setIsUpdating(true)
     try {
-      const endpoint = voteType === 'up' ? `/upvote/${company.name}` : `/downvote/${company.name}`
+      // Encode the company name to handle spaces and special characters
+      const encodedName = encodeURIComponent(company.name)
+      const endpoint = voteType === 'up' ? `/upvote/${encodedName}` : `/downvote/${encodedName}`
+      
+      console.log(`Sending vote to endpoint: ${endpoint} for company: ${company.name}`)
       
       const response = await fetch(endpoint, {
         method: 'POST',
