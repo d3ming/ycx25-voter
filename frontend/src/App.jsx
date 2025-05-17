@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { Dialog, Transition } from '@headlessui/react'
 import Header from './components/Header'
 import CompanyTable from './components/CompanyTable'
 import Footer from './components/Footer'

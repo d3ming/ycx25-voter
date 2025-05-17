@@ -1,5 +1,4 @@
 import React, { useState, useRef, useEffect } from 'react'
-import { ArrowUpIcon, ArrowDownIcon } from '@heroicons/react/24/solid'
 
 const CompanyRow = ({ company, companies, setCompanies }) => {
   const [showVoteInput, setShowVoteInput] = useState(false)
@@ -115,15 +114,15 @@ const CompanyRow = ({ company, companies, setCompanies }) => {
   }
 
   return (
-    <tr className="transition duration-150 ease-in-out hover:bg-[#2d2d2d]">
-      <td className="px-3 py-3 whitespace-nowrap">
-        <div className="flex items-center space-x-2">
-          <div className="flex items-center">
+    <tr className="company-row">
+      <td>
+        <div className="flex items-center">
+          <div>
             {showVoteInput ? (
               <input
                 ref={inputRef}
                 type="number"
-                className="w-16 text-sm px-2 py-1 bg-dark-accent text-gray-200 border border-accent-blue rounded-md focus:outline-none focus:ring-1 focus:ring-accent-blue"
+                style={{ width: '60px' }}
                 value={voteValue}
                 onChange={handleVoteChange}
                 onBlur={handleBlur}
@@ -132,54 +131,55 @@ const CompanyRow = ({ company, companies, setCompanies }) => {
               />
             ) : (
               <span 
-                className={`font-semibold text-xl text-gray-200 cursor-pointer hover:text-accent-blue transition-colors duration-200 ${hasFlashEffect ? 'vote-updated' : ''}`}
+                className={`font-bold text-xl cursor-pointer ${hasFlashEffect ? 'vote-updated' : ''}`}
                 onClick={handleVoteDisplayClick}
+                style={{ marginRight: '10px' }}
               >
-                {company.votes}
+                {company.votes || company.rank || 0}
               </span>
             )}
           </div>
-          <div className="flex flex-col space-y-1 ml-2">
+          <div style={{ display: 'flex', flexDirection: 'column', marginLeft: '8px' }}>
             <button 
               onClick={() => handleVote('up')} 
-              className="text-gray-400 hover:text-accent-green focus:outline-none transition-colors duration-200" 
+              className="text-gray-400"
               title="Upvote"
               disabled={isUpdating}
             >
-              <ArrowUpIcon className="h-4 w-4" />
+              <i className="fas fa-arrow-up"></i>
             </button>
             <button 
               onClick={() => handleVote('down')} 
-              className="text-gray-400 hover:text-accent-red focus:outline-none transition-colors duration-200" 
+              className="text-gray-400"
               title="Downvote"
               disabled={isUpdating}
+              style={{ marginTop: '4px' }}
             >
-              <ArrowDownIcon className="h-4 w-4" />
+              <i className="fas fa-arrow-down"></i>
             </button>
           </div>
         </div>
       </td>
-      <td className="px-3 py-3 whitespace-nowrap">
-        <div className="flex flex-col">
-          <div className="text-sm font-medium">
+      <td>
+        <div>
+          <div className="text-sm">
             <a 
               href={company.website} 
               target="_blank" 
-              className="text-accent-blue hover:text-blue-400 transition-colors duration-200"
+              className="text-accent-blue"
             >
               {company.name}
             </a>
           </div>
         </div>
       </td>
-      <td className="px-3 py-3 whitespace-nowrap">
+      <td>
         <div className="text-xs text-gray-400">
           {company.founders && company.founders.map((founder, index) => (
             <div key={index}>
               <a 
                 href={founder.linkedin} 
                 target="_blank" 
-                className="hover:text-accent-blue transition-colors duration-200"
               >
                 {founder.name}
               </a>
@@ -187,27 +187,27 @@ const CompanyRow = ({ company, companies, setCompanies }) => {
           ))}
         </div>
       </td>
-      <td className="px-3 py-3">
-        <div className="text-xs text-gray-300 max-w-md">
-          {company.description}
+      <td>
+        <div className="text-xs" style={{ maxWidth: '500px' }}>
+          {company.short_description || company.description}
         </div>
       </td>
-      <td className="px-3 py-3 whitespace-nowrap text-xs font-medium">
-        <div className="flex space-x-2">
+      <td>
+        <div style={{ display: 'flex', gap: '10px' }}>
           <a 
-            href={company.website_url} 
+            href={company.website} 
             target="_blank" 
-            className="text-gray-400 hover:text-accent-blue transition-colors duration-200 flex items-center"
+            className="text-gray-400"
           >
-            <i className="fas fa-globe mr-1"></i> Web
+            <i className="fas fa-globe" style={{ marginRight: '4px' }}></i> Web
           </a>
           {company.company_linkedin && (
             <a 
               href={company.company_linkedin} 
               target="_blank" 
-              className="text-gray-400 hover:text-accent-blue transition-colors duration-200 flex items-center"
+              className="text-gray-400"
             >
-              <i className="fab fa-linkedin mr-1"></i> LinkedIn
+              <i className="fab fa-linkedin" style={{ marginRight: '4px' }}></i> LinkedIn
             </a>
           )}
         </div>

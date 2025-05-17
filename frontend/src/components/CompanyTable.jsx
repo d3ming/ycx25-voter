@@ -1,35 +1,34 @@
-import React, { useState } from 'react'
-import { ArrowUpIcon, ArrowDownIcon } from '@heroicons/react/24/solid'
+import React from 'react'
 import CompanyRow from './CompanyRow'
 
 const CompanyTable = ({ companies, setCompanies }) => {
   return (
-    <div className="bg-dark-card shadow-lg overflow-hidden rounded-lg border border-dark-border">
+    <div className="dark-card shadow-lg overflow-hidden rounded-md border">
       <div className="overflow-x-auto">
-        <table className="min-w-full divide-y divide-dark-border">
-          <thead className="bg-dark-accent">
+        <table>
+          <thead className="dark-accent">
             <tr>
-              <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-24 sticky top-0">
+              <th style={{ width: '100px' }}>
                 Votes
               </th>
-              <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider sticky top-0">
+              <th>
                 Company
               </th>
-              <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider sticky top-0">
+              <th>
                 Founders
               </th>
-              <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider sticky top-0">
+              <th>
                 Description
               </th>
-              <th scope="col" className="px-3 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider w-32 sticky top-0">
+              <th style={{ width: '120px' }}>
                 Links
               </th>
             </tr>
           </thead>
-          <tbody className="bg-dark-card divide-y divide-dark-border">
+          <tbody>
             {companies.map(company => (
               <CompanyRow 
-                key={company.companyId} 
+                key={company.companyId || company.name.replace(/\s+/g, '')} 
                 company={company} 
                 companies={companies}
                 setCompanies={setCompanies}
@@ -37,7 +36,7 @@ const CompanyTable = ({ companies, setCompanies }) => {
             ))}
             {companies.length === 0 && (
               <tr>
-                <td colSpan="5" className="px-3 py-10 text-center text-gray-400">
+                <td colSpan="5" style={{ padding: '2rem', textAlign: 'center', color: '#9ca3af' }}>
                   No companies found matching your search criteria.
                 </td>
               </tr>
