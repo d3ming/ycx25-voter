@@ -61,14 +61,30 @@ def load_and_process_data():
                 'rank': 0  # Initial rank is 0
             }
         
-        # Check if this row is a founder
-        founder_title = str(row['Founder Title'])
-        if founder_title == 'Founder' or 'Founder' in founder_title or 'CEO' in founder_title:
-            # Check if this is not a duplicate founder
+        # Process founder data
+        if row['Founder Title'] in ['Founder', 'Co-Founder', 'CEO', 'Co-Founder & CEO', 'Co-Founder & CTO']:
             founder_name = row['Founder Name']
-            if founder_name and isinstance(founder_name, str) and \
-               founder_name not in [f['name'] for f in companies[company_name]['founders']] and \
-               founder_name != company_name:
+            
+            # Skip company descriptions that sometimes appear in founder fields
+            description_keywords = ["Open-Source", "Faster", "The Co-Pilot", "Vision-first", 
+                                   "AI that", "Optimize", "for", "Co-Pilot", "founded", "inc"]
+                                   
+            # Check if this is an actual founder name and not a description
+            is_description = False
+            if not isinstance(founder_name, str):
+                is_description = True
+            elif founder_name == company_name:
+                is_description = True
+            else:
+                for keyword in description_keywords:
+                    if isinstance(founder_name, str) and keyword in founder_name:
+                        is_description = True
+                        break
+            
+            # Only add if it's an actual founder and not already in the list
+            if (not is_description and 
+                isinstance(founder_name, str) and 
+                founder_name not in [f['name'] for f in companies[company_name]['founders']]):
                 companies[company_name]['founders'].append({
                     'name': founder_name,
                     'linkedin': row['Founder LinkedIn']
