@@ -19,10 +19,11 @@ app = FastAPI(title="YC X25 Batch Explorer")
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allows all origins
+    allow_origins=["http://localhost:3000", "https://localhost:3000", "http://172.31.128.108:3000", "https://172.31.128.108:3000", "*"],  # More specific CORS settings
     allow_credentials=True,
-    allow_methods=["*"],  # Allows all methods
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["*"],  # Allows all headers
+    expose_headers=["*"]
 )
 
 # Mount static directory

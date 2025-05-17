@@ -13,10 +13,21 @@ function App() {
     // Fetch companies when component mounts
     const fetchCompanies = async () => {
       try {
-        // Use the absolute API URL to avoid issues with CORS and proxies
-        const API_URL = 'http://localhost:5000';
+        // Get the current hostname from window.location
+        const hostname = window.location.hostname;
+        // For Replit, use the correct port
+        const API_URL = `http://${hostname}:5000`;
         
-        const response = await fetch(`${API_URL}/api/companies`)
+        console.log('Fetching from API URL:', API_URL);
+        
+        const response = await fetch(`${API_URL}/api/companies`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          mode: 'cors'
+        })
         
         if (!response.ok) {
           throw new Error(`API request failed: ${response.status}`)
