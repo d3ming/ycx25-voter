@@ -1,36 +1,3 @@
-// Function to filter companies based on search text
-function filterCompanies() {
-    const searchText = document.getElementById('search-filter').value.toLowerCase();
-    const companyRows = document.querySelectorAll('tbody.bg-dark-card tr.company-row');
-    const filterCount = document.getElementById('filter-count');
-    
-    let visibleCount = 0;
-    
-    companyRows.forEach(row => {
-        const companyName = row.querySelector('td:nth-child(2)').textContent.toLowerCase();
-        const founderNames = Array.from(row.querySelectorAll('td:nth-child(3) div a')).map(a => a.textContent.toLowerCase());
-        const description = row.querySelector('td:nth-child(4)').textContent.toLowerCase();
-        
-        const nameMatch = companyName.includes(searchText);
-        const founderMatch = founderNames.some(name => name.includes(searchText));
-        const descriptionMatch = description.includes(searchText);
-        
-        if (nameMatch || founderMatch || descriptionMatch || searchText === '') {
-            row.classList.remove('hidden');
-            visibleCount++;
-        } else {
-            row.classList.add('hidden');
-        }
-    });
-    
-    // Update the filter count display
-    if (searchText === '') {
-        filterCount.textContent = 'Showing all companies';
-    } else {
-        filterCount.textContent = `Showing ${visibleCount} of ${companyRows.length} companies`;
-    }
-}
-
 // Function to handle voting through AJAX
 async function handleVote(companyName, voteType) {
     try {

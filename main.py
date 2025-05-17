@@ -1,8 +1,7 @@
 from fastapi import FastAPI, Request, Form, Depends, HTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import RedirectResponse, JSONResponse, HTMLResponse
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse, JSONResponse
 import pandas as pd
 import os
 from typing import List, Dict, Any, Optional
@@ -16,41 +15,11 @@ from database import get_db, Company as DBCompany, create_tables, initialize_db
 
 app = FastAPI(title="YC X25 Batch Explorer")
 
-# Add CORS middleware
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000", "https://localhost:3000", "http://172.31.128.108:3000", "https://172.31.128.108:3000", "*"],  # More specific CORS settings
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "PUT", "DELETE"],
-    allow_headers=["*"],  # Allows all headers
-    expose_headers=["*"]
-)
-
 # Mount static directory
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Set up templates
 templates = Jinja2Templates(directory="templates")
-
-# Add route for serving the React app (for production)
-@app.get("/react", response_class=HTMLResponse)
-async def react_app(request: Request):
-    return """
-    <!DOCTYPE html>
-    <html lang="en" class="dark">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-      <title>YC X25 Batch Explorer</title>
-      <script type="module" crossorigin src="/static/react/assets/index-123456.js"></script>
-      <link rel="stylesheet" href="/static/react/assets/index-123456.css">
-    </head>
-    <body class="bg-dark-bg text-gray-200 dark">
-      <div id="root"></div>
-    </body>
-    </html>
-    """
 
 # Model for company data
 class CompanyModel(BaseModel):
@@ -150,11 +119,6 @@ def get_company_by_name(db: Session, name: str):
     """Get a company by name"""
     return db.query(DBCompany).filter(DBCompany.name == name).first()
 
-# Get company by ID
-def get_company_by_id(db: Session, company_id: int):
-    """Get a company by ID"""
-    return db.query(DBCompany).filter(DBCompany.id == company_id).first()
-
 # Database setup at startup
 @app.on_event("startup")
 async def startup_event():
@@ -167,25 +131,6 @@ async def startup_event():
     
     # Initialize database with company data
     initialize_db(companies_data)
-
-@app.get("/api/companies")
-async def get_companies(db: Session = Depends(get_db)):
-    """Get all companies as JSON for the React frontend"""
-    # Get companies from database
-    companies = get_companies_from_db(db)
-    
-    # Sort companies by votes (highest first)
-    sorted_companies = sorted(companies, key=lambda x: x['rank'], reverse=True)
-    
-    # Add CORS headers
-    return JSONResponse(
-        content=sorted_companies,
-        headers={
-            "Access-Control-Allow-Origin": "*",
-            "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-            "Access-Control-Allow-Headers": "Content-Type, Authorization",
-        }
-    )
 
 @app.get("/")
 async def home(request: Request, db: Session = Depends(get_db)):
@@ -200,16 +145,16 @@ async def home(request: Request, db: Session = Depends(get_db)):
         {"request": request, "companies": sorted_companies}
     )
 
-@app.post("/update_rank/{company_id}")
+@app.post("/update_rank/{company_name}")
 async def update_rank(
     request: Request,
-    company_id: int, 
+    company_name: str, 
     rank: int = Form(...), 
     db: Session = Depends(get_db)
 ):
     """Update votes for a company"""
     # Find the company in the database
-    company = get_company_by_id(db, company_id)
+    company = get_company_by_name(db, company_name)
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
     
@@ -224,17 +169,16 @@ async def update_rank(
         return JSONResponse({
             "success": True,
             "votes": company.votes,
-            "id": company.id,
-            "name": company.name
+            "company": company_name
         })
     else:
         return RedirectResponse(url="/", status_code=303)
 
-@app.post("/upvote/{company_id}")
-async def upvote(request: Request, company_id: int, db: Session = Depends(get_db)):
+@app.post("/upvote/{company_name}")
+async def upvote(request: Request, company_name: str, db: Session = Depends(get_db)):
     """Upvote a company"""
     # Find the company in the database
-    company = get_company_by_id(db, company_id)
+    company = get_company_by_name(db, company_name)
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
     
@@ -250,17 +194,16 @@ async def upvote(request: Request, company_id: int, db: Session = Depends(get_db
         return JSONResponse({
             "success": True,
             "votes": company.votes,
-            "id": company.id,
-            "name": company.name
+            "company": company_name
         })
     else:
         return RedirectResponse(url="/", status_code=303)
 
-@app.post("/downvote/{company_id}")
-async def downvote(request: Request, company_id: int, db: Session = Depends(get_db)):
+@app.post("/downvote/{company_name}")
+async def downvote(request: Request, company_name: str, db: Session = Depends(get_db)):
     """Downvote a company"""
     # Find the company in the database
-    company = get_company_by_id(db, company_id)
+    company = get_company_by_name(db, company_name)
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
     
@@ -276,8 +219,7 @@ async def downvote(request: Request, company_id: int, db: Session = Depends(get_
         return JSONResponse({
             "success": True,
             "votes": company.votes,
-            "id": company.id,
-            "name": company.name
+            "company": company_name
         })
     else:
         return RedirectResponse(url="/", status_code=303)
