@@ -88,6 +88,17 @@
         input[type=number] {
             -moz-appearance: textfield;
         }
+        
+        /* Animation for vote updates */
+        .vote-updated {
+            animation: vote-flash 0.5s ease;
+        }
+        
+        @keyframes vote-flash {
+            0% { color: #3B82F6; }
+            50% { color: #10B981; }
+            100% { color: #f9fafb; }
+        }
     </style>
 </head>
 <body class="bg-dark-bg text-gray-200 dark">
@@ -132,22 +143,18 @@
                             <td class="px-3 py-3 whitespace-nowrap">
                                 <div class="flex items-center space-x-2">
                                     <div class="flex items-center">
-                                        <form id="voteForm{{ company.name | replace(' ', '') }}" action="/update_rank/{{ company.name }}" method="post" class="hidden">
-                                            <input type="number" id="voteInput{{ company.name | replace(' ', '') }}" name="rank" class="vote-input w-16 text-sm px-2 py-1 bg-dark-accent text-gray-200 border border-accent-blue rounded-md focus:outline-none focus:ring-1 focus:ring-accent-blue" value="{{ company.rank }}" onblur="submitVoteForm('{{ company.name | replace(' ', '') }}')" onkeydown="handleEnterKey(event, '{{ company.name | replace(' ', '') }}')">
-                                        </form>
+                                        <div id="voteForm{{ company.name | replace(' ', '') }}" class="hidden">
+                                            <input type="number" id="voteInput{{ company.name | replace(' ', '') }}" class="vote-input w-16 text-sm px-2 py-1 bg-dark-accent text-gray-200 border border-accent-blue rounded-md focus:outline-none focus:ring-1 focus:ring-accent-blue" value="{{ company.rank }}" onblur="handleVoteBlur('{{ company.name | replace(' ', '') }}')" onkeydown="handleEnterKey(event, '{{ company.name | replace(' ', '') }}')">
+                                        </div>
                                         <span id="voteDisplay{{ company.name | replace(' ', '') }}" class="font-semibold text-xl text-gray-200 cursor-pointer hover:text-accent-blue transition-colors duration-200" onclick="showVoteInput('{{ company.name | replace(' ', '') }}')">{{ company.rank }}</span>
                                     </div>
                                     <div class="flex flex-col space-y-1 ml-2">
-                                        <form action="/upvote/{{ company.name }}" method="post" class="inline">
-                                            <button type="submit" class="text-gray-400 hover:text-accent-green focus:outline-none transition-colors duration-200" title="Upvote">
-                                                <i class="fas fa-arrow-up text-sm"></i>
-                                            </button>
-                                        </form>
-                                        <form action="/downvote/{{ company.name }}" method="post" class="inline">
-                                            <button type="submit" class="text-gray-400 hover:text-accent-red focus:outline-none transition-colors duration-200" title="Downvote">
-                                                <i class="fas fa-arrow-down text-sm"></i>
-                                            </button>
-                                        </form>
+                                        <button onclick="handleVote('{{ company.name | replace(' ', '') }}', 'up')" class="text-gray-400 hover:text-accent-green focus:outline-none transition-colors duration-200" title="Upvote">
+                                            <i class="fas fa-arrow-up text-sm"></i>
+                                        </button>
+                                        <button onclick="handleVote('{{ company.name | replace(' ', '') }}', 'down')" class="text-gray-400 hover:text-accent-red focus:outline-none transition-colors duration-200" title="Downvote">
+                                            <i class="fas fa-arrow-down text-sm"></i>
+                                        </button>
                                     </div>
                                 </div>
                             </td>
@@ -201,5 +208,8 @@
             <p class="text-xs text-gray-500 text-center">YC X25 Batch Explorer for Angel Investors</p>
         </div>
     </footer>
+    
+    <!-- Load the AJAX voting script -->
+    <script src="/static/js/app.js"></script>
 </body>
 </html>

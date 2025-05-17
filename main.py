@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Request, Form, Depends, HTTPException
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, JSONResponse
 import pandas as pd
 import os
 from typing import List, Dict, Any, Optional
@@ -147,6 +147,7 @@ async def home(request: Request, db: Session = Depends(get_db)):
 
 @app.post("/update_rank/{company_name}")
 async def update_rank(
+    request: Request,
     company_name: str, 
     rank: int = Form(...), 
     db: Session = Depends(get_db)
@@ -161,10 +162,20 @@ async def update_rank(
     setattr(company, 'votes', rank)
     db.commit()
     
-    return RedirectResponse(url="/", status_code=303)
+    # Check if it's an AJAX request or a regular form submission
+    is_ajax = request.headers.get("accept") == "application/json"
+    
+    if is_ajax:
+        return JSONResponse({
+            "success": True,
+            "votes": company.votes,
+            "company": company_name
+        })
+    else:
+        return RedirectResponse(url="/", status_code=303)
 
 @app.post("/upvote/{company_name}")
-async def upvote(company_name: str, db: Session = Depends(get_db)):
+async def upvote(request: Request, company_name: str, db: Session = Depends(get_db)):
     """Upvote a company"""
     # Find the company in the database
     company = get_company_by_name(db, company_name)
@@ -176,10 +187,20 @@ async def upvote(company_name: str, db: Session = Depends(get_db)):
     setattr(company, 'votes', current_votes + 1)
     db.commit()
     
-    return RedirectResponse(url="/", status_code=303)
+    # Check if it's an AJAX request or a regular form submission
+    is_ajax = request.headers.get("accept") == "application/json"
+    
+    if is_ajax:
+        return JSONResponse({
+            "success": True,
+            "votes": company.votes,
+            "company": company_name
+        })
+    else:
+        return RedirectResponse(url="/", status_code=303)
 
 @app.post("/downvote/{company_name}")
-async def downvote(company_name: str, db: Session = Depends(get_db)):
+async def downvote(request: Request, company_name: str, db: Session = Depends(get_db)):
     """Downvote a company"""
     # Find the company in the database
     company = get_company_by_name(db, company_name)
@@ -191,7 +212,17 @@ async def downvote(company_name: str, db: Session = Depends(get_db)):
     setattr(company, 'votes', current_votes - 1)
     db.commit()
     
-    return RedirectResponse(url="/", status_code=303)
+    # Check if it's an AJAX request or a regular form submission
+    is_ajax = request.headers.get("accept") == "application/json"
+    
+    if is_ajax:
+        return JSONResponse({
+            "success": True,
+            "votes": company.votes,
+            "company": company_name
+        })
+    else:
+        return RedirectResponse(url="/", status_code=303)
 
 # Run with: uvicorn main:app --host 0.0.0.0 --port 5000 --reload
 if __name__ == "__main__":
