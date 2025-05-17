@@ -13,20 +13,23 @@ function App() {
     // Fetch companies when component mounts
     const fetchCompanies = async () => {
       try {
-        // Use the relative URL which will be handled by the proxy
-        const response = await fetch('/api/companies')
+        // Use the absolute API URL to avoid issues with CORS and proxies
+        const API_URL = 'http://localhost:5000';
+        
+        const response = await fetch(`${API_URL}/api/companies`)
         
         if (!response.ok) {
           throw new Error(`API request failed: ${response.status}`)
         }
         
         const data = await response.json()
+        console.log('API data:', data);
         
         // Process the data
         const formattedCompanies = data.map(company => ({
           name: company.name,
-          votes: company.votes,
-          rank: company.rank,
+          votes: company.votes || company.rank || 0,
+          rank: company.rank || company.votes || 0,
           website: company.website,
           description: company.description,
           short_description: company.short_description || company.description,
