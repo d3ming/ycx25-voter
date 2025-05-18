@@ -78,48 +78,39 @@ def process_csv_data():
         if is_founder:
             founder_name = row['Founder Name']
             
-            # Expanded list of keywords that indicate this is a description, not a founder
-            description_keywords = [
-                "Open-Source", "Faster", "The Co-Pilot", "Vision-first", 
-                "AI that", "Optimize", "for", "Co-Pilot", "founded", "inc",
-                "Vertical AI", "Open Source", "Platform", "Software", 
-                "Troubleshoot", "Powering", "future", "monitor", "control",
-                "optimize", "Modern", "Free", "Built", "Designed",
-                "Tool", "Solution", "Service", "System", "Framework",
-                "App", "Application", "Product", "Helps", "Enabling", 
-                "Leading", "Building", "Agent", "Analytics", "Management",
-                "Automation", "Infrastructure", "Cloud", "Data", "Network",
-                "Security", "Technology", "Healthcare", "Financial", 
-                "Engine", "Protocol", "Marketplace", "Factory", "Workflow",
-                "Device", "Mobile", "Desktop", "Web", "Internet", 
-                "Digital", "Virtual", "Reality", "Artificial", "Intelligence"
-            ]
-                                   
-            # Check if this is an actual founder name and not a description
+            # Filter non-founder entries from founder fields
             is_description = False
             
-            # If it's not a string, it's not a valid founder name
+            # Skip if it's not a string
             if not isinstance(founder_name, str):
                 is_description = True
-            # Skip if the founder name is the same as the company name
+            # Skip if the name is empty or too short
+            elif not founder_name or len(founder_name) < 3:
+                is_description = True
+            # Skip if the founder name matches the company name
             elif founder_name == company_name:
                 is_description = True
-            # Skip if the founder name is part of the company description
-            elif isinstance(founder_name, str) and founder_name in companies[company_name]['description']:
+            # Skip if founder name is unreasonably long for a person's name
+            elif len(founder_name) > 50:
                 is_description = True
-            # Check if the name is too long or doesn't contain a space (probably not a person's name)
-            elif isinstance(founder_name, str) and (len(founder_name) > 40 or " " not in founder_name):
+            # Skip "Programs" entries (common in the CSV)
+            elif founder_name == "Programs":
                 is_description = True
-            # Check if the name contains any description keywords
-            else:
-                for keyword in description_keywords:
-                    if isinstance(founder_name, str) and keyword in founder_name:
-                        is_description = True
-                        break
-                        
-            # Check if the founder name is just the first part of a company description
-            # (sometimes the first phrase of a description appears as a founder)
-            if not is_description and isinstance(founder_name, str) and companies[company_name]['description'].startswith(founder_name):
+            # Skip if it's the company description (first line in the CSV for each company)
+            elif companies[company_name]['description'].startswith(founder_name):
+                is_description = True
+            # Skip if the name matches these specific description patterns
+            elif any(pattern in founder_name for pattern in [
+                "Founded in", "Based in", "has employees", "AI for", "AI that"
+            ]):
+                is_description = True
+            # More focused list of description keywords that shouldn't appear in actual people's names
+            elif any(keyword in founder_name for keyword in [
+                "Open-Source", "Faster", "Co-Pilot", "Vision-first", "Platform",
+                "Software", "Troubleshoot", "Powering", "Monitor", "Control",
+                "Solution", "Service", "System", "Framework", "Application", 
+                "Product", "Workflow", "Gigascale"
+            ]):
                 is_description = True
             
             # Only add if it's an actual founder and not already in the list
