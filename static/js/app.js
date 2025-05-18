@@ -299,7 +299,7 @@ async function addTag(companyId, tagText) {
         const formData = new FormData();
         formData.append('tag', tagText);
         
-        const response = await fetch(`/add_tag/${companyId}`, {
+        const response = await fetch(`/api/tags/${companyId}`, {
             method: 'POST',
             body: formData
         });
@@ -329,8 +329,8 @@ async function addTag(companyId, tagText) {
 // Remove a tag from a company
 async function removeTag(companyId, tagIndex) {
     try {
-        const response = await fetch(`/remove_tag/${companyId}/${tagIndex}`, {
-            method: 'POST'
+        const response = await fetch(`/api/tags/${companyId}/${tagIndex}`, {
+            method: 'DELETE'
         });
         
         if (response.ok) {
