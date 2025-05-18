@@ -142,8 +142,8 @@ async def home(request: Request, db: Session = Depends(get_db)):
     # Get companies from database
     companies = get_companies_from_db(db)
     
-    # Sort companies by votes (highest first)
-    sorted_companies = sorted(companies, key=lambda x: x['rank'], reverse=True)
+    # Sort companies by rank (lowest first - 1 is the highest rank)
+    sorted_companies = sorted(companies, key=lambda x: x['rank'] if x['rank'] > 0 else float('inf'))
     
     return templates.TemplateResponse(
         "index.html", 

@@ -1,24 +1,48 @@
-// Function to handle voting through AJAX
-async function handleVote(companyId, voteType) {
+// Function to handle ranking through AJAX
+async function handleRank(companyId, rankType) {
     try {
-        // Get the current vote count element
-        const voteDisplayElement = document.getElementById(`voteDisplay${companyId}`);
+        // Get the current rank element
+        const rankDisplayElement = document.getElementById(`voteDisplay${companyId}`);
         
-        // Get current vote value
-        const currentVotes = parseInt(voteDisplayElement.textContent || '0', 10);
+        // Get current rank value
+        const currentRank = parseInt(rankDisplayElement.textContent || '0', 10);
         
         // Update UI immediately for responsive feel (optimistic update)
-        const newVotes = voteType === 'up' ? currentVotes + 1 : Math.max(0, currentVotes - 1);
-        voteDisplayElement.textContent = newVotes;
+        // For ranking, "promote" means decreasing the number (better rank), "demote" means increasing
+        let newRank;
+        if (rankType === 'promote') {
+            // Don't allow rank below 1 (1 is the highest rank)
+            newRank = Math.max(1, currentRank - 1);
+        } else {
+            // For demote, increase the rank number
+            newRank = currentRank + 1;
+        }
+        
+        // If the optimistic update didn't change anything, don't continue
+        if (newRank === currentRank) {
+            // Can't promote any higher than 1
+            if (rankType === 'promote') {
+                rankDisplayElement.classList.add('vote-updated');
+                setTimeout(() => {
+                    rankDisplayElement.classList.remove('vote-updated');
+                }, 500);
+            }
+            return;
+        }
+        
+        // Update the display right away
+        rankDisplayElement.textContent = newRank;
         
         // Show feedback animation right away
-        voteDisplayElement.classList.add('vote-updated');
+        rankDisplayElement.classList.add('vote-updated');
         setTimeout(() => {
-            voteDisplayElement.classList.remove('vote-updated');
+            rankDisplayElement.classList.remove('vote-updated');
         }, 500);
         
-        // Determine the endpoint based on vote type
-        const endpoint = voteType === 'up' ? `/upvote/${companyId}` : `/downvote/${companyId}`;
+        // Determine the endpoint based on rank change type
+        // We'll reuse the upvote/downvote endpoints but with inverted logic
+        // Since lower rank is better, promote = downvote and demote = upvote
+        const endpoint = rankType === 'promote' ? `/downvote/${companyId}` : `/upvote/${companyId}`;
         
         // Make API call in background
         const response = await fetch(endpoint, {
@@ -30,22 +54,22 @@ async function handleVote(companyId, voteType) {
         });
         
         if (response.ok) {
-            // Get the actual updated vote count from server
+            // Get the actual updated rank from server
             const data = await response.json();
             
             // Update to server value (only if different from our optimistic update)
-            if (data.votes !== newVotes) {
-                voteDisplayElement.textContent = data.votes;
+            if (data.votes !== newRank) {
+                rankDisplayElement.textContent = data.votes;
             }
         } else {
             // If there was an error, rollback to original value
-            console.error('Error updating vote:', response.statusText);
-            voteDisplayElement.textContent = currentVotes;
+            console.error('Error updating rank:', response.statusText);
+            rankDisplayElement.textContent = currentRank;
             
             // Show error indicator
-            voteDisplayElement.classList.add('vote-error');
+            rankDisplayElement.classList.add('vote-error');
             setTimeout(() => {
-                voteDisplayElement.classList.remove('vote-error');
+                rankDisplayElement.classList.remove('vote-error');
             }, 500);
         }
     } catch (error) {
