@@ -271,6 +271,23 @@ async def update_tier(
     else:
         return RedirectResponse(url="/", status_code=303)
 
+# API endpoint to get sorted companies
+@app.get("/api/companies")
+async def api_companies(request: Request, db: Session = Depends(get_db)):
+    """Get sorted companies data for AJAX updates"""
+    # Get companies from database
+    companies = get_companies_from_db(db)
+    
+    # Sort companies first by tier (A,B,C,D) and then by rank (lowest first - 1 is the highest rank)
+    sorted_companies = sorted(companies, key=lambda x: (
+        # Tier sorting (A,B,C,D)
+        'ABCD'.index(x['tier']) if x['tier'] in 'ABCD' else 3,  # Default to C (index 2) if tier not valid
+        # Rank sorting (1,2,3...)
+        x['rank'] if x['rank'] > 0 else float('inf')
+    ))
+    
+    return sorted_companies
+
 # Run with: uvicorn main:app --host 0.0.0.0 --port 5000 --reload
 if __name__ == "__main__":
     import uvicorn
