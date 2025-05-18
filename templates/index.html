@@ -241,19 +241,19 @@
                                 </div>
                                 
                                 <!-- Company Tags -->
-                                <div class="mt-2 tag-container" data-company-id="{{ company.id }}">
+                                <div class="mt-1 tag-container" data-company-id="{{ company.id }}">
                                     {% if company.tags %}
                                         {% for tag in company.tags %}
-                                        <span class="inline-flex items-center px-2 py-1 mr-1 mb-1 rounded-md text-xs bg-dark-accent text-gray-300 transition-colors duration-200">
+                                        <span class="inline-flex items-center px-1.5 py-0.5 mr-1 mb-0.5 rounded-md text-xs bg-dark-accent text-gray-300 transition-colors duration-200">
                                             {{ tag }}
-                                            <button type="button" class="ml-1 text-gray-400 hover:text-accent-red remove-tag-btn" data-tag-index="{{ loop.index0 }}">
+                                            <button type="button" class="ml-0.5 text-gray-400 hover:text-accent-red remove-tag-btn" data-tag-index="{{ loop.index0 }}">
                                                 <i class="fas fa-times"></i>
                                             </button>
                                         </span>
                                         {% endfor %}
                                     {% endif %}
-                                    <button type="button" class="add-tag-btn inline-flex items-center px-2 py-1 rounded-md text-xs bg-dark-accent text-gray-300 hover:bg-accent-blue hover:text-white transition-colors duration-200">
-                                        <i class="fas fa-plus mr-1"></i> Add Tag
+                                    <button type="button" class="add-tag-btn inline-flex items-center px-1.5 py-0.5 rounded-md text-xs bg-dark-accent text-gray-300 hover:bg-accent-blue hover:text-white transition-colors duration-200">
+                                        <i class="fas fa-plus mr-1"></i> Add
                                     </button>
                                 </div>
                             </td>

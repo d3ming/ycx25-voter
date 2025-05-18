@@ -418,34 +418,34 @@ function renderCompanyRows(companies, tableBody) {
                     </div>
                 </div>
             </td>
-            <td class="px-3 py-3 whitespace-nowrap">
+            <td class="px-2 py-2 whitespace-nowrap">
                 <div class="flex flex-col">
                     <div class="flex items-center">
                         <a href="${company.website}" target="_blank" class="text-accent-blue hover:text-blue-400 transition-colors duration-200 text-sm font-medium">
                             ${company.name}
                         </a>
                         ${company.company_linkedin ? `
-                        <a href="${company.company_linkedin}" target="_blank" class="ml-2 text-blue-500 hover:text-blue-400 transition-colors duration-200 flex-shrink-0">
-                            <span class="bg-blue-900 text-blue-100 px-1.5 py-0.5 rounded text-xs font-semibold">LinkedIn</span>
+                        <a href="${company.company_linkedin}" target="_blank" class="ml-1 text-blue-500 hover:text-blue-400 transition-colors duration-200 flex-shrink-0">
+                            <span class="bg-blue-900 text-blue-100 px-1 py-0 rounded text-xs font-semibold">LinkedIn</span>
                         </a>
                         ` : ''}
                     </div>
-                    <div class="text-xs text-gray-500 mt-1">${company.short_description || ''}</div>
+                    <div class="text-xs text-gray-500 mt-0.5">${company.short_description || ''}</div>
                 </div>
             </td>
 
-            <td class="px-3 py-3 whitespace-nowrap">
-                <div class="flex flex-col space-y-1">
+            <td class="px-2 py-2 whitespace-nowrap">
+                <div class="flex flex-col space-y-0.5">
                     ${renderFounders(company.founders)}
                 </div>
-                <div class="text-xs text-gray-500 mt-1">${company.founded_year || ''} • ${company.location || ''}</div>
+                <div class="text-xs text-gray-500 mt-0.5">${company.founded_year || ''} • ${company.location || ''}</div>
             </td>
-            <td class="px-3 py-3">
-                <div class="flex flex-wrap gap-1">
+            <td class="px-2 py-2">
+                <div class="flex flex-wrap gap-0.5">
                     ${renderTags(company.tags, company.id)}
-                    <div class="mt-1">
+                    <div class="mt-0.5">
                         <form onsubmit="event.preventDefault(); addTag(${company.id}, this.querySelector('input').value); this.querySelector('input').value='';" class="flex items-center">
-                            <input type="text" placeholder="Add tag..." class="text-xs w-20 px-1 py-0.5 bg-dark-accent text-gray-200 border border-dark-border rounded-l-md focus:outline-none focus:ring-1 focus:ring-accent-blue">
+                            <input type="text" placeholder="Add tag..." class="text-xs w-16 px-1 py-0.5 bg-dark-accent text-gray-200 border border-dark-border rounded-l-md focus:outline-none focus:ring-1 focus:ring-accent-blue">
                             <button type="submit" class="bg-dark-accent border border-dark-border border-l-0 rounded-r-md px-1 py-0.5 text-xs text-gray-400 hover:text-accent-blue">+</button>
                         </form>
                     </div>
