@@ -6,7 +6,7 @@ packages = ["glibcLocales", "libxcrypt", "postgresql", "tailwindcss"]
 
 [deployment]
 deploymentTarget = "autoscale"
-run = ["streamlit", "run", "app.py", "--server.port", "5000"]
+run = ["sh", "-c", "uvicorn main:app --host 0.0.0.0 --port 5000"]
 
 [workflows]
 runButton = "Project"
