@@ -2,7 +2,7 @@
 async function handleRank(companyId, rankType) {
     try {
         // Get the current rank element
-        const rankDisplayElement = document.getElementById(`voteDisplay${companyId}`);
+        const rankDisplayElement = document.getElementById(`rankDisplay${companyId}`);
         if (!rankDisplayElement) {
             console.error('Could not find rank display element', companyId);
             return;
@@ -94,12 +94,17 @@ async function handleRank(companyId, rankType) {
 // Function to handle manual rank setting
 async function submitVote(companyId) {
     try {
-        const rankInput = document.getElementById(`voteInput${companyId}`);
+        const rankInput = document.getElementById(`rankInput${companyId}`);
         let rankValue = parseInt(rankInput.value, 10);
-        const rankDisplay = document.getElementById(`voteDisplay${companyId}`);
+        const rankDisplay = document.getElementById(`rankDisplay${companyId}`);
+        
+        if (!rankInput || !rankDisplay) {
+            console.error('Could not find rank elements for company', companyId);
+            return;
+        }
         
         // Ensure rank is at least 1 (1 is the highest rank)
-        if (rankValue < 1) {
+        if (isNaN(rankValue) || rankValue < 1) {
             rankValue = 1;
         }
         
@@ -108,7 +113,7 @@ async function submitVote(companyId) {
         
         // Hide input, show display
         rankDisplay.classList.remove('hidden');
-        document.getElementById(`voteForm${companyId}`).classList.add('hidden');
+        document.getElementById(`rankInputContainer${companyId}`).classList.add('hidden');
         
         // Flash effect immediately for responsiveness
         rankDisplay.classList.add('vote-updated');
