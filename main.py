@@ -145,7 +145,7 @@ async def home(request: Request, db: Session = Depends(get_db)):
     # Sort companies first by tier (A,B,C,D) and then by rank (lowest first - 1 is the highest rank)
     sorted_companies = sorted(companies, key=lambda x: (
         # Tier sorting (A,B,C,D)
-        'ABCD'.index(x['tier']) if x['tier'] in 'ABCD' else 3,  # Default to C (index 2) if tier not valid
+        'ABCD'.index(x['tier']) if x['tier'] in 'ABCD' else 3,  # Default to D (index 3) if tier not valid
         # Rank sorting (1,2,3...)
         x['rank'] if x['rank'] > 0 else float('inf')
     ))
