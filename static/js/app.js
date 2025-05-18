@@ -493,20 +493,25 @@ async function loadAllCompaniesData() {
 }
 
 // Function to search and filter companies on the client side
-function searchAndFilterCompanies(query = '', tags = '') {
+function searchAndFilterCompanies(query = '', tags = '', tier = '') {
     // If we don't have the data yet, don't filter
     if (allCompaniesData.length === 0) {
         console.log('No companies data available for filtering');
         return;
     }
     
-    console.log('Filtering locally with params:', {query, tags});
+    // Get tier filter value if not provided as argument
+    if (!tier) {
+        tier = document.getElementById('tierFilterSelect').value;
+    }
+    
+    console.log('Filtering locally with params:', {query, tags, tier});
     query = (query || '').toLowerCase().trim();
     
     // Filter companies based on search and tag criteria
     const filteredCompanies = allCompaniesData.filter(company => {
         // If no filters are applied, include all companies
-        if (!query && !tags) {
+        if (!query && !tags && !tier) {
             return true;
         }
         
@@ -568,6 +573,13 @@ function searchAndFilterCompanies(query = '', tags = '') {
             
             // If company doesn't have the tag, exclude it
             if (!hasTag) {
+                matches = false;
+            }
+        }
+        
+        // If we have a tier filter, check if company matches the tier
+        if (tier && matches) { // Only check tier if company still matches after other filters
+            if (company.tier !== tier) {
                 matches = false;
             }
         }
@@ -799,7 +811,8 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (searchInput) {
         const debouncedSearch = debounce(function() {
             const tagFilter = document.getElementById('tagFilterSelect').value;
-            searchAndFilterCompanies(this.value, tagFilter);
+            const tierFilter = document.getElementById('tierFilterSelect').value;
+            searchAndFilterCompanies(this.value, tagFilter, tierFilter);
         }, 200);
         
         searchInput.addEventListener('input', function() {
@@ -844,15 +857,36 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
     }
     
+    // Tier filter select
+    const tierFilterSelect = document.getElementById('tierFilterSelect');
+    if (tierFilterSelect) {
+        tierFilterSelect.addEventListener('change', function() {
+            const searchQuery = document.getElementById('searchInput').value;
+            const tagFilter = document.getElementById('tagFilterSelect').value;
+            
+            // Show visual feedback
+            const tableBody = document.querySelector('tbody');
+            if (tableBody) {
+                tableBody.style.opacity = '0.7';
+                setTimeout(() => { tableBody.style.opacity = '1'; }, 150);
+            }
+            
+            // Apply filtering with the tier filter
+            searchAndFilterCompanies(searchQuery, tagFilter, this.value);
+        });
+    }
+    
     // Clear filters button
     const clearFiltersBtn = document.getElementById('clearFiltersBtn');
     if (clearFiltersBtn) {
         clearFiltersBtn.addEventListener('click', function() {
             const searchInput = document.getElementById('searchInput');
             const tagFilterSelect = document.getElementById('tagFilterSelect');
+            const tierFilterSelect = document.getElementById('tierFilterSelect');
             
             if (searchInput) searchInput.value = '';
             if (tagFilterSelect) tagFilterSelect.value = '';
+            if (tierFilterSelect) tierFilterSelect.value = '';
             
             // Show visual feedback
             const tableBody = document.querySelector('tbody');
@@ -862,7 +896,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             }
             
             // Show all companies (no filters)
-            searchAndFilterCompanies();
+            searchAndFilterCompanies('', '', '');
         });
     }
 });
