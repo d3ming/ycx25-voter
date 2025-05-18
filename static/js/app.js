@@ -831,6 +831,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (tagFilterSelect) {
         tagFilterSelect.addEventListener('change', function() {
             const searchQuery = document.getElementById('searchInput').value;
+            const tierFilter = document.getElementById('tierFilterSelect').value;
             
             // Show visual feedback
             const tableBody = document.querySelector('tbody');
@@ -840,7 +841,7 @@ document.addEventListener('DOMContentLoaded', async function() {
             }
             
             // Client-side filtering is fast, so no need to debounce
-            searchAndFilterCompanies(searchQuery, this.value);
+            searchAndFilterCompanies(searchQuery, this.value, tierFilter);
         });
     }
     
@@ -852,7 +853,8 @@ document.addEventListener('DOMContentLoaded', async function() {
             if (searchInput) {
                 searchInput.value = '';
                 const tagFilter = document.getElementById('tagFilterSelect').value;
-                searchAndFilterCompanies('', tagFilter);
+                const tierFilter = document.getElementById('tierFilterSelect').value;
+                searchAndFilterCompanies('', tagFilter, tierFilter);
             }
         });
     }
