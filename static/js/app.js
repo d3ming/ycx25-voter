@@ -698,7 +698,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 tierFilterSelect.value = '';
             }
             
-            // Show all companies
+            // Apply the cleared filters to show all companies
             searchAndFilterCompanies('', '', '');
         });
     }
