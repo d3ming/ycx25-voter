@@ -197,17 +197,20 @@ async def update_rank(
         if rank < 1:
             raise HTTPException(status_code=422, detail="Rank must be at least 1")
             
-        # Find the company in the database using standard try-except error handling
+        # Find the company in the database
         company = get_company_by_id(db, company_id)
         if not company:
             raise HTTPException(status_code=404, detail="Company not found")
         
-        # Update votes using direct attribute modification 
-        # instead of setattr to avoid SQLAlchemy typing issues
-        company.votes = rank
-        db.add(company)  # Explicitly add the modified object back
+        # Use query update which is more reliable than attribute assignment for SQLAlchemy
+        db.query(DBCompany).filter(DBCompany.id == company_id).update(
+            {"votes": rank},
+            synchronize_session="fetch"
+        )
         db.commit()
-        db.refresh(company)  # Refresh to ensure we have the updated data
+        
+        # Get the updated company object
+        company = db.query(DBCompany).filter(DBCompany.id == company_id).first()
         
         # Check if it's an AJAX request or a regular form submission
         is_ajax = request.headers.get("accept") == "application/json"
@@ -237,12 +240,23 @@ async def upvote(request: Request, company_id: int, db: Session = Depends(get_db
         if not company:
             raise HTTPException(status_code=404, detail="Company not found")
         
-        # Increment rank number (worse rank)
-        current_rank = company.votes if company.votes is not None else 0
-        company.votes = current_rank + 1
-        db.add(company)  # Explicitly add the modified object
+        # Get the current rank safely
+        current_rank = 0
+        if company and company.votes is not None:
+            try:
+                current_rank = int(company.votes)
+            except (ValueError, TypeError):
+                current_rank = 0
+        
+        # Use query update which is more reliable than attribute assignment
+        db.query(DBCompany).filter(DBCompany.id == company_id).update(
+            {"votes": current_rank + 1},
+            synchronize_session="fetch"
+        )
         db.commit()
-        db.refresh(company)  # Ensure we have updated data
+        
+        # Get the updated company data
+        company = db.query(DBCompany).filter(DBCompany.id == company_id).first()
         
         # Check if it's an AJAX request or a regular form submission
         is_ajax = request.headers.get("accept") == "application/json"
@@ -250,7 +264,7 @@ async def upvote(request: Request, company_id: int, db: Session = Depends(get_db
         if is_ajax:
             return JSONResponse({
                 "success": True,
-                "votes": company.votes,
+                "votes": company.votes if company else 0,
                 "company_id": company_id
             })
         else:
@@ -264,30 +278,47 @@ async def upvote(request: Request, company_id: int, db: Session = Depends(get_db
 @app.post("/downvote/{company_id}")
 async def downvote(request: Request, company_id: int, db: Session = Depends(get_db)):
     """Downvote a company"""
-    # Find the company in the database
-    company = get_company_by_id(db, company_id)
-    if not company:
-        raise HTTPException(status_code=404, detail="Company not found")
-    
-    # For ranking: when we downvote, we actually improve the rank (lower number)
-    current_rank = company.votes if company.votes is not None else 0
-    
-    # Don't allow ranks below 1 (1 is the highest rank)
-    if current_rank > 1:
-        company.votes = current_rank - 1
-        db.commit()
-    
-    # Check if it's an AJAX request or a regular form submission
-    is_ajax = request.headers.get("accept") == "application/json"
-    
-    if is_ajax:
-        return JSONResponse({
-            "success": True,
-            "votes": company.votes,
-            "company_id": company_id
-        })
-    else:
-        return RedirectResponse(url="/", status_code=303)
+    try:
+        # Find the company in the database
+        company = get_company_by_id(db, company_id)
+        if not company:
+            raise HTTPException(status_code=404, detail="Company not found")
+        
+        # For ranking: when we downvote, we actually improve the rank (lower number)
+        current_rank = 0
+        if company and company.votes is not None:
+            try:
+                current_rank = int(company.votes)
+            except (TypeError, ValueError):
+                current_rank = 0
+        
+        # Don't allow ranks below 1 (1 is the highest rank)
+        if current_rank > 1:
+            # Use the query update syntax to avoid SQLAlchemy type issues
+            db.query(DBCompany).filter(DBCompany.id == company_id).update(
+                {"votes": current_rank - 1},
+                synchronize_session="fetch"
+            )
+            db.commit()
+            # Refresh the company object to get updated values
+            company = db.query(DBCompany).filter(DBCompany.id == company_id).first()
+        
+        # Check if it's an AJAX request or a regular form submission
+        is_ajax = request.headers.get("accept") == "application/json"
+        
+        if is_ajax:
+            return JSONResponse({
+                "success": True,
+                "votes": company.votes if company else current_rank,  # Defensive programming
+                "company_id": company_id
+            })
+        else:
+            return RedirectResponse(url="/", status_code=303)
+            
+    except Exception as e:
+        db.rollback()  # Always rollback on error
+        print(f"Error in downvote: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to downvote: {str(e)}")
 
 # API endpoint to update a company's tier
 @app.post("/update_tier/{company_id}")
@@ -298,30 +329,43 @@ async def update_tier(
     db: Session = Depends(get_db)
 ):
     """Update tier for a company"""
-    # Find the company in the database
-    company = get_company_by_id(db, company_id)
-    if not company:
-        raise HTTPException(status_code=404, detail="Company not found")
-    
-    # Validate tier
-    if tier not in ['A', 'B', 'C', 'D']:
-        raise HTTPException(status_code=422, detail="Invalid tier. Must be A, B, C, or D")
-    
-    # Update tier using setattr (to avoid SQLAlchemy typing issues)
-    setattr(company, 'tier', tier)
-    db.commit()
-    
-    # Check if it's an AJAX request or a regular form submission
-    is_ajax = request.headers.get("accept") == "application/json"
-    
-    if is_ajax:
-        return JSONResponse({
-            "success": True,
-            "tier": company.tier,
-            "company_id": company_id
-        })
-    else:
-        return RedirectResponse(url="/", status_code=303)
+    try:
+        # Validate tier
+        if tier not in ['A', 'B', 'C', 'D']:
+            raise HTTPException(status_code=422, detail="Invalid tier. Must be A, B, C, or D")
+            
+        # Find the company using a safer query approach
+        company = get_company_by_id(db, company_id)
+        if not company:
+            raise HTTPException(status_code=404, detail="Company not found")
+        
+        # Update tier using query update method to avoid SQLAlchemy type issues
+        db.query(DBCompany).filter(DBCompany.id == company_id).update(
+            {"tier": tier},
+            synchronize_session="fetch"
+        )
+        db.commit()
+        
+        # Get the updated company 
+        company = db.query(DBCompany).filter(DBCompany.id == company_id).first()
+        
+        # Check if it's an AJAX request or a regular form submission
+        is_ajax = request.headers.get("accept") == "application/json"
+        
+        if is_ajax:
+            return JSONResponse({
+                "success": True,
+                "tier": company.tier,
+                "company_id": company_id
+            })
+        else:
+            return RedirectResponse(url="/", status_code=303)
+            
+    except Exception as e:
+        db.rollback()  # Always rollback on error
+        print(f"Error updating tier: {e}")
+        # Return a user-friendly error response
+        raise HTTPException(status_code=500, detail=f"Failed to update tier: {str(e)}")
 
 # API endpoint to get sorted companies
 @app.get("/api/companies")
