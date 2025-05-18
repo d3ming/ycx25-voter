@@ -297,7 +297,8 @@ async def downvote(request: Request, company_id: int, db: Session = Depends(get_
     if is_ajax:
         return JSONResponse({
             "success": True,
-            "votes": new_rank,
+            "rank": new_rank,
+            "votes": new_rank,  # Keep for backward compatibility
             "company_id": company_id
         })
     else:
