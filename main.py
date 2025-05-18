@@ -287,6 +287,14 @@ async def api_companies(request: Request, db: Session = Depends(get_db)):
     # Get companies from database
     companies = get_companies_from_db(db)
     
+    # Process companies to remove unwanted fields
+    for company in companies:
+        # Remove founded_year and location fields
+        if 'founded_year' in company:
+            del company['founded_year']
+        if 'location' in company:
+            del company['location']
+    
     # Define a helper function to determine tier order safely
     def get_tier_index(tier):
         if tier == 'A': 
