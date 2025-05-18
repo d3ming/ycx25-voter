@@ -143,6 +143,14 @@ async def home(request: Request, db: Session = Depends(get_db)):
     # Get companies from database
     companies = get_companies_from_db(db)
     
+    # Process companies to remove unwanted fields
+    for company in companies:
+        # Remove founded_year and location fields
+        if 'founded_year' in company:
+            del company['founded_year']
+        if 'location' in company:
+            del company['location']
+    
     # Sort companies first by tier (A,B,C,D) and then by rank (lowest first - 1 is the highest rank)
     sorted_companies = sorted(companies, key=lambda x: (
         # Tier sorting (A,B,C,D)
