@@ -385,9 +385,9 @@ function renderCompanyRows(companies, tableBody) {
         
         // Create the HTML for the row
         row.innerHTML = `
-            <td class="px-3 py-3 whitespace-nowrap">
-                <div class="flex items-center space-x-2">
-                    <div class="flex items-center flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-3">
+            <td class="px-2 py-2 whitespace-nowrap">
+                <div class="flex items-center space-x-1">
+                    <div class="flex items-center flex-col md:flex-row space-y-1 md:space-y-0 md:space-x-2">
                         <!-- Tier dropdown -->
                         <div class="flex items-center">
                             <select id="tierSelect${company.id}" data-company-id="${company.id}" data-original-tier="${company.tier}" class="text-sm w-12 px-1 py-1 bg-dark-accent text-gray-200 border border-dark-border rounded-md focus:outline-none focus:ring-1 focus:ring-accent-blue" onchange="handleTierChange(${company.id}, this.value)">

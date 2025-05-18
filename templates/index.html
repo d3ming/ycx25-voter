@@ -178,9 +178,9 @@
                     <tbody id="companiesTableBody" class="bg-dark-card divide-y divide-dark-border">
                         {% for company in companies %}
                         <tr class="company-row transition duration-150 ease-in-out">
-                            <td class="px-3 py-3 whitespace-nowrap">
-                                <div class="flex items-center space-x-2">
-                                    <div class="flex items-center flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-3">
+                            <td class="px-2 py-2 whitespace-nowrap">
+                                <div class="flex items-center space-x-1">
+                                    <div class="flex items-center flex-col md:flex-row space-y-1 md:space-y-0 md:space-x-2">
                                         <!-- Tier dropdown -->
                                         <div class="flex items-center">
                                             <select id="tierSelect{{ company.id }}" class="text-sm w-12 px-1 py-1 bg-dark-accent text-gray-200 border border-dark-border rounded-md focus:outline-none focus:ring-1 focus:ring-accent-blue" onchange="handleTierChange('{{ company.id }}', this.value)">
@@ -189,7 +189,7 @@
                                                 <option value="C" {% if company.tier == 'C' %}selected{% endif %}>C</option>
                                                 <option value="D" {% if company.tier == 'D' %}selected{% endif %}>D</option>
                                             </select>
-                                            <span class="mx-2 text-gray-500">/</span>
+                                            <span class="mx-1 text-gray-500">/</span>
                                         </div>
                                         
                                         <!-- Rank controls -->
@@ -211,29 +211,29 @@
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-3 py-3 whitespace-nowrap">
+                            <td class="px-2 py-2 whitespace-nowrap">
                                 <div class="flex flex-col">
                                     <div class="flex items-center">
                                         <a href="{{ company.website }}" target="_blank" class="text-accent-blue hover:text-blue-400 transition-colors duration-200 text-sm font-medium">
                                             {{ company.name }}
                                         </a>
                                         {% if company.company_linkedin %}
-                                        <a href="{{ company.company_linkedin }}" target="_blank" class="ml-2 text-blue-500 hover:text-blue-400 transition-colors duration-200 flex-shrink-0">
-                                            <span class="bg-blue-900 text-blue-100 px-1.5 py-0.5 rounded text-xs font-semibold">LinkedIn</span>
+                                        <a href="{{ company.company_linkedin }}" target="_blank" class="ml-1 text-blue-500 hover:text-blue-400 transition-colors duration-200 flex-shrink-0">
+                                            <span class="bg-blue-900 text-blue-100 px-1 py-0 rounded text-xs font-semibold">LinkedIn</span>
                                         </a>
                                         {% endif %}
                                     </div>
-                                    <div class="text-sm text-gray-400 mt-1">{{ company.description }}</div>
+                                    <div class="text-xs text-gray-400 mt-0.5">{{ company.description }}</div>
                                 </div>
                             </td>
-                            <td class="px-3 py-3 whitespace-nowrap">
+                            <td class="px-2 py-2 whitespace-nowrap">
                                 <div class="text-xs text-gray-400">
                                     {% for founder in company.founders %}
-                                    <div class="mb-1 flex items-center">
+                                    <div class="mb-0.5 flex items-center">
                                         <span class="text-gray-300">{{ founder.name }}</span>
                                         {% if founder.linkedin %}
-                                        <a href="{{ founder.linkedin }}" target="_blank" class="ml-2 text-blue-500 hover:text-blue-400 transition-colors duration-200 flex-shrink-0">
-                                            <span class="bg-blue-900 text-blue-100 px-1.5 py-0.5 rounded text-xs font-semibold">LinkedIn</span>
+                                        <a href="{{ founder.linkedin }}" target="_blank" class="ml-1 text-blue-500 hover:text-blue-400 transition-colors duration-200 flex-shrink-0">
+                                            <span class="bg-blue-900 text-blue-100 px-1 py-0 rounded text-xs font-semibold">LinkedIn</span>
                                         </a>
                                         {% endif %}
                                     </div>
