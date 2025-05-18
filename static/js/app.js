@@ -680,7 +680,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     
     // Set up clear filters button
-    const clearFiltersButton = document.getElementById('clearFilters');
+    const clearFiltersButton = document.getElementById('clearFiltersBtn');
     if (clearFiltersButton) {
         clearFiltersButton.addEventListener('click', () => {
             // Reset search input
