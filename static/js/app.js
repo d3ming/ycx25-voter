@@ -215,6 +215,213 @@ async function handleTierChange(companyId, tier) {
     }
 }
 
+// Collect all unique tags from all companies
+function collectAllTags(companies) {
+    const tagSet = new Set();
+    companies.forEach(company => {
+        if (company.tags && Array.isArray(company.tags)) {
+            company.tags.forEach(tag => tagSet.add(tag));
+        }
+    });
+    return Array.from(tagSet).sort();
+}
+
+// Update tag filter dropdown with all available tags
+function updateTagFilterOptions(tags) {
+    const tagFilterSelect = document.getElementById('tagFilterSelect');
+    if (!tagFilterSelect) return;
+    
+    // Clear existing options (except the first one)
+    while (tagFilterSelect.options.length > 1) {
+        tagFilterSelect.remove(1);
+    }
+    
+    // Add options for each tag
+    tags.forEach(tag => {
+        const option = document.createElement('option');
+        option.value = tag;
+        option.textContent = tag;
+        tagFilterSelect.appendChild(option);
+    });
+}
+
+// Add a tag to a company
+async function addTag(companyId, tagText) {
+    try {
+        if (!tagText || !tagText.trim()) return;
+        
+        // Submit the new tag to the server
+        const formData = new FormData();
+        formData.append('tag', tagText);
+        
+        const response = await fetch(`/api/tags/${companyId}`, {
+            method: 'POST',
+            body: formData
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success) {
+                // Refresh the table to show the new tag
+                fetchAndUpdateCompanies();
+            }
+        }
+    } catch (error) {
+        console.error('Error adding tag:', error);
+    }
+}
+
+// Remove a tag from a company
+async function removeTag(companyId, tagIndex) {
+    try {
+        const response = await fetch(`/api/tags/${companyId}/${tagIndex}`, {
+            method: 'DELETE'
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            if (data.success) {
+                // Refresh the table to update tags
+                fetchAndUpdateCompanies();
+            }
+        }
+    } catch (error) {
+        console.error('Error removing tag:', error);
+    }
+}
+
+// Function to search and filter companies
+async function searchAndFilterCompanies(query = '', tags = '') {
+    try {
+        // Construct the query string
+        const params = new URLSearchParams();
+        if (query) params.append('query', query);
+        if (tags) params.append('tags', tags);
+        
+        // Fetch filtered companies from API
+        const response = await fetch(`/api/search?${params.toString()}`, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            const companiesData = await response.json();
+            
+            // Update the table with filtered data
+            const tableBody = document.querySelector('tbody');
+            if (tableBody) {
+                // Update the tag filter dropdown with all available tags
+                updateTagFilterOptions(collectAllTags(companiesData));
+                
+                // Render the filtered companies
+                renderCompanyRows(companiesData, tableBody);
+            }
+        } else {
+            console.error('Error searching companies:', response.statusText);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+// Set up event listeners for tag management when document is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Add tag buttons
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.add-tag-btn')) {
+            const tagContainer = e.target.closest('.tag-container');
+            const companyId = tagContainer.getAttribute('data-company-id');
+            
+            // Create input for new tag
+            const tagInput = document.createElement('input');
+            tagInput.type = 'text';
+            tagInput.className = 'w-20 px-1 py-1 text-xs bg-dark-accent text-gray-200 border border-accent-blue rounded-md focus:outline-none';
+            tagInput.placeholder = 'New tag...';
+            
+            // Handle tag submission
+            tagInput.addEventListener('keydown', async function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const tagText = this.value.trim();
+                    if (tagText) {
+                        await addTag(companyId, tagText);
+                    }
+                    this.remove();
+                } else if (e.key === 'Escape') {
+                    this.remove();
+                }
+            });
+            
+            tagInput.addEventListener('blur', function() {
+                this.remove();
+            });
+            
+            // Add input before the add button
+            e.target.closest('.add-tag-btn').insertAdjacentElement('beforebegin', tagInput);
+            tagInput.focus();
+        }
+    });
+    
+    // Remove tag buttons
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.remove-tag-btn')) {
+            const btn = e.target.closest('.remove-tag-btn');
+            const tagContainer = btn.closest('.tag-container');
+            const companyId = tagContainer.getAttribute('data-company-id');
+            const tagIndex = btn.getAttribute('data-tag-index');
+            
+            removeTag(companyId, tagIndex);
+        }
+    });
+    
+    // Search input
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', function() {
+            const tagFilter = document.getElementById('tagFilterSelect').value;
+            searchAndFilterCompanies(this.value, tagFilter);
+        });
+    }
+    
+    // Tag filter select
+    const tagFilterSelect = document.getElementById('tagFilterSelect');
+    if (tagFilterSelect) {
+        tagFilterSelect.addEventListener('change', function() {
+            const searchQuery = document.getElementById('searchInput').value;
+            searchAndFilterCompanies(searchQuery, this.value);
+        });
+    }
+    
+    // Clear search button
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+    if (clearSearchBtn) {
+        clearSearchBtn.addEventListener('click', function() {
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                searchInput.value = '';
+                const tagFilter = document.getElementById('tagFilterSelect').value;
+                searchAndFilterCompanies('', tagFilter);
+            }
+        });
+    }
+    
+    // Clear filters button
+    const clearFiltersBtn = document.getElementById('clearFiltersBtn');
+    if (clearFiltersBtn) {
+        clearFiltersBtn.addEventListener('click', function() {
+            const searchInput = document.getElementById('searchInput');
+            const tagFilterSelect = document.getElementById('tagFilterSelect');
+            
+            if (searchInput) searchInput.value = '';
+            if (tagFilterSelect) tagFilterSelect.value = '';
+            
+            fetchAndUpdateCompanies();
+        });
+    }
+});
+
 // Function to fetch updated companies and refresh the table
 async function fetchAndUpdateCompanies() {
     try {
