@@ -191,10 +191,10 @@
                                         
                                         <!-- Rank controls -->
                                         <div class="flex items-center">
-                                            <div id="voteForm{{ company.id }}" class="hidden">
-                                                <input type="number" id="voteInput{{ company.id }}" min="1" class="vote-input w-16 text-sm px-2 py-1 bg-dark-accent text-gray-200 border border-accent-blue rounded-md focus:outline-none focus:ring-1 focus:ring-accent-blue" value="{{ company.rank }}" onblur="handleVoteBlur('{{ company.id }}')" onkeydown="handleEnterKey(event, '{{ company.id }}')">
+                                            <div id="rankInputContainer{{ company.id }}" class="hidden">
+                                                <input type="number" id="rankInput{{ company.id }}" min="1" class="vote-input w-16 text-sm px-2 py-1 bg-dark-accent text-gray-200 border border-accent-blue rounded-md focus:outline-none focus:ring-1 focus:ring-accent-blue" value="{{ company.votes }}" onblur="handleVoteBlur('{{ company.id }}')" onkeydown="handleEnterKey(event, '{{ company.id }}')">
                                             </div>
-                                            <span id="voteDisplay{{ company.id }}" class="font-semibold text-xl text-gray-200 cursor-pointer hover:text-accent-blue transition-colors duration-200" onclick="showVoteInput('{{ company.id }}')">{{ company.rank }}</span>
+                                            <span id="voteDisplay{{ company.id }}" class="font-semibold text-xl text-gray-200 cursor-pointer hover:text-accent-blue transition-colors duration-200" onclick="showVoteInput('{{ company.id }}')">{{ company.votes }}</span>
                                         
                                             <div class="flex flex-col space-y-1 ml-2">
                                                 <button onclick="handleRank('{{ company.id }}', 'promote')" class="text-gray-400 hover:text-accent-green focus:outline-none transition-colors duration-200" title="Promote (Lower Rank Number)">
