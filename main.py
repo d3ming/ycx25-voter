@@ -389,15 +389,14 @@ async def search_companies(
     # Get all companies
     companies = get_companies_from_db(db)
     
-    # Parse tag filter (comma-separated list)
-    tag_filters = [t.strip() for t in tags.split(',')] if tags else []
-    tag_filters = [t for t in tag_filters if t]  # Remove empty entries
+    # Parse tag filter - pass a single tag as a string, not comma-separated
+    tag_filter = tags.strip() if tags else ""
     
     # Filter companies
     filtered_companies = []
     for company in companies:
         # Always include company if no filters are applied
-        if not query and not tag_filters:
+        if not query and not tag_filter:
             filtered_companies.append(company)
             continue
             
@@ -414,12 +413,12 @@ async def search_companies(
         else:
             founder_match = True
             
-        # Check tag match (any tag must match at least one filter)
+        # Check tag match (company must have the selected tag)
         tag_match = True
-        if tag_filters:
+        if tag_filter:
             company_tags = company.get('tags', [])
-            # Check if any of the selected tags is in the company's tags
-            tag_match = any(filter_tag in company_tags for filter_tag in tag_filters)
+            # Check if the selected tag is in the company's tags
+            tag_match = tag_filter in company_tags
         
         # Add company if it matches any filter
         if name_match or founder_match or tag_match:

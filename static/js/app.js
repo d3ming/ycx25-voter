@@ -243,6 +243,8 @@ function updateTagFilterOptions(tags) {
         option.textContent = tag;
         tagFilterSelect.appendChild(option);
     });
+    
+    console.log('Updated tag filter dropdown with', tags.length, 'tags');
 }
 
 // Add a tag to a company
@@ -315,14 +317,6 @@ async function searchAndFilterCompanies(query = '', tags = '') {
             // Update the table with filtered data
             const tableBody = document.querySelector('tbody');
             if (tableBody) {
-                // Update the tag filter dropdown with all available tags from all companies
-                // We use a separate API call to get all tags for the dropdown
-                const allTagsResponse = await fetch('/api/companies');
-                if (allTagsResponse.ok) {
-                    const allCompaniesData = await allTagsResponse.json();
-                    updateTagFilterOptions(collectAllTags(allCompaniesData));
-                }
-                
                 // Render the filtered companies
                 renderCompanyRows(companiesData, tableBody);
             }
@@ -335,7 +329,18 @@ async function searchAndFilterCompanies(query = '', tags = '') {
 }
 
 // Set up event listeners for tag management when document is loaded
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
+    // Initialize the tag filter dropdown with all available tags
+    try {
+        const response = await fetch('/api/companies');
+        if (response.ok) {
+            const companiesData = await response.json();
+            const allTags = collectAllTags(companiesData);
+            updateTagFilterOptions(allTags);
+        }
+    } catch (error) {
+        console.error('Error initializing tag filter:', error);
+    }
     // Add tag buttons
     document.addEventListener('click', function(e) {
         if (e.target.closest('.add-tag-btn')) {
