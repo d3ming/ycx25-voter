@@ -241,6 +241,19 @@ async function fetchAndUpdateCompanies() {
             tableBody.innerHTML = '';
             
             // Create new rows for each company
+            console.log('Total companies to render:', companiesData.length);
+            
+            // Count companies by tier for debugging
+            const tierCounts = {};
+            companiesData.forEach(c => {
+                tierCounts[c.tier] = (tierCounts[c.tier] || 0) + 1;
+            });
+            console.log('Companies by tier:', tierCounts);
+            
+            // Log tier D companies for debugging
+            const tierDCompanies = companiesData.filter(c => c.tier === 'D');
+            console.log('Tier D companies:', tierDCompanies.length, tierDCompanies.map(c => c.name));
+            
             companiesData.forEach(company => {
                 const row = document.createElement('tr');
                 row.className = 'company-row transition duration-150 ease-in-out';
