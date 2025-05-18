@@ -417,9 +417,9 @@ async def search_companies(
         # Check tag match (any tag must match at least one filter)
         tag_match = True
         if tag_filters:
-            company_tags = company['tags']
-            # If no tags required OR at least one tag matches
-            tag_match = not tag_filters or any(t in company_tags for t in tag_filters)
+            company_tags = company.get('tags', [])
+            # Check if any of the selected tags is in the company's tags
+            tag_match = any(filter_tag in company_tags for filter_tag in tag_filters)
         
         # Add company if it matches any filter
         if name_match or founder_match or tag_match:

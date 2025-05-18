@@ -298,6 +298,8 @@ async function searchAndFilterCompanies(query = '', tags = '') {
         if (query) params.append('query', query);
         if (tags) params.append('tags', tags);
         
+        console.log('Searching with params:', {query, tags});
+        
         // Fetch filtered companies from API
         const response = await fetch(`/api/search?${params.toString()}`, {
             method: 'GET',
@@ -308,12 +310,18 @@ async function searchAndFilterCompanies(query = '', tags = '') {
         
         if (response.ok) {
             const companiesData = await response.json();
+            console.log(`Found ${companiesData.length} companies matching criteria`);
             
             // Update the table with filtered data
             const tableBody = document.querySelector('tbody');
             if (tableBody) {
-                // Update the tag filter dropdown with all available tags
-                updateTagFilterOptions(collectAllTags(companiesData));
+                // Update the tag filter dropdown with all available tags from all companies
+                // We use a separate API call to get all tags for the dropdown
+                const allTagsResponse = await fetch('/api/companies');
+                if (allTagsResponse.ok) {
+                    const allCompaniesData = await allTagsResponse.json();
+                    updateTagFilterOptions(collectAllTags(allCompaniesData));
+                }
                 
                 // Render the filtered companies
                 renderCompanyRows(companiesData, tableBody);
@@ -376,12 +384,27 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
     
-    // Search input
+    // Debounce function to limit how often a function can be called
+    function debounce(func, wait) {
+        let timeout;
+        return function(...args) {
+            const context = this;
+            clearTimeout(timeout);
+            timeout = setTimeout(() => func.apply(context, args), wait);
+        };
+    }
+    
+    // Search input with debouncing (300ms)
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {
-        searchInput.addEventListener('input', function() {
+        const debouncedSearch = debounce(function() {
             const tagFilter = document.getElementById('tagFilterSelect').value;
             searchAndFilterCompanies(this.value, tagFilter);
+        }, 300);
+        
+        searchInput.addEventListener('input', function() {
+            // Show loading indicator or similar UI feedback
+            debouncedSearch.call(this);
         });
     }
     
@@ -390,6 +413,7 @@ document.addEventListener('DOMContentLoaded', function() {
     if (tagFilterSelect) {
         tagFilterSelect.addEventListener('change', function() {
             const searchQuery = document.getElementById('searchInput').value;
+            // Tag filtering is explicit user action, so no need to debounce
             searchAndFilterCompanies(searchQuery, this.value);
         });
     }
