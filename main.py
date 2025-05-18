@@ -301,6 +301,139 @@ async def api_companies(request: Request, db: Session = Depends(get_db)):
     
     return sorted_companies
 
+# API endpoints for managing tags
+@app.post("/api/tags/{company_id}")
+async def add_tag(request: Request, company_id: int, tag: str = Form(...), db: Session = Depends(get_db)):
+    """Add a tag to a company"""
+    # Find the company in the database
+    company = get_company_by_id(db, company_id)
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+    
+    # Sanitize the tag (remove HTML and limit length)
+    sanitized_tag = bleach.clean(tag, tags=[], strip=True)[:30].strip()
+    
+    # Don't allow empty tags
+    if not sanitized_tag:
+        raise HTTPException(status_code=422, detail="Tag cannot be empty")
+    
+    # Load existing tags or create empty list
+    try:
+        if company.tags:
+            tags = json.loads(company.tags)
+        else:
+            tags = []
+    except json.JSONDecodeError:
+        tags = []
+    
+    # Check if tag already exists
+    if sanitized_tag in tags:
+        return JSONResponse({
+            "success": True,
+            "tags": tags,
+            "message": "Tag already exists"
+        })
+    
+    # Add new tag and save
+    tags.append(sanitized_tag)
+    setattr(company, 'tags', json.dumps(tags))
+    db.commit()
+    
+    return JSONResponse({
+        "success": True,
+        "tags": tags
+    })
+
+@app.delete("/api/tags/{company_id}/{tag_index}")
+async def remove_tag(request: Request, company_id: int, tag_index: int, db: Session = Depends(get_db)):
+    """Remove a tag from a company by index"""
+    # Find the company in the database
+    company = get_company_by_id(db, company_id)
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+    
+    # Load existing tags
+    try:
+        if company.tags:
+            tags = json.loads(company.tags)
+        else:
+            tags = []
+    except json.JSONDecodeError:
+        tags = []
+    
+    # Check if index is valid
+    if tag_index < 0 or tag_index >= len(tags):
+        raise HTTPException(status_code=422, detail="Invalid tag index")
+    
+    # Remove tag by index
+    removed_tag = tags.pop(tag_index)
+    setattr(company, 'tags', json.dumps(tags))
+    db.commit()
+    
+    return JSONResponse({
+        "success": True,
+        "tags": tags,
+        "removed": removed_tag
+    })
+
+# API endpoint to search/filter companies
+@app.get("/api/search")
+async def search_companies(
+    request: Request, 
+    query: str = "", 
+    tags: str = "", 
+    db: Session = Depends(get_db)
+):
+    """Search and filter companies by name, founder, or tags"""
+    # Get all companies
+    companies = get_companies_from_db(db)
+    
+    # Parse tag filter (comma-separated list)
+    tag_filters = [t.strip() for t in tags.split(',')] if tags else []
+    tag_filters = [t for t in tag_filters if t]  # Remove empty entries
+    
+    # Filter companies
+    filtered_companies = []
+    for company in companies:
+        # Always include company if no filters are applied
+        if not query and not tag_filters:
+            filtered_companies.append(company)
+            continue
+            
+        # Check name match
+        name_match = query.lower() in company['name'].lower() if query else True
+        
+        # Check founder match
+        founder_match = False
+        if query:
+            for founder in company['founders']:
+                if query.lower() in founder['name'].lower():
+                    founder_match = True
+                    break
+        else:
+            founder_match = True
+            
+        # Check tag match (any tag must match at least one filter)
+        tag_match = True
+        if tag_filters:
+            company_tags = company['tags']
+            # If no tags required OR at least one tag matches
+            tag_match = not tag_filters or any(t in company_tags for t in tag_filters)
+        
+        # Add company if it matches any filter
+        if name_match or founder_match or tag_match:
+            filtered_companies.append(company)
+    
+    # Sort filtered companies
+    sorted_companies = sorted(filtered_companies, key=lambda x: (
+        # Tier sorting (A,B,C,D)
+        'ABCD'.index(x['tier']) if x['tier'] in 'ABCD' else 3,
+        # Rank sorting (1,2,3...)
+        x['rank'] if x['rank'] > 0 else float('inf')
+    ))
+    
+    return sorted_companies
+
 # Run with: uvicorn main:app --host 0.0.0.0 --port 5000 --reload
 if __name__ == "__main__":
     import uvicorn

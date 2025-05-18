@@ -27,6 +27,7 @@ class Company(Base):
     founded_year = Column(String)
     location = Column(String)
     short_description = Column(Text, nullable=True)
+    tags = Column(Text, default='[]')  # Store as JSON string array of tags
 
     def to_dict(self):
         """Convert company to dictionary for API responses"""
@@ -53,7 +54,8 @@ class Company(Base):
             "tier": self.tier,    # Company tier (A, B, C, D)
             "founded_year": self.founded_year,
             "location": self.location,
-            "short_description": self.short_description
+            "short_description": self.short_description,
+            "tags": json.loads(self.tags) if self.tags and isinstance(self.tags, str) else []
         }
 
 # Create tables
