@@ -52,6 +52,9 @@ async function handleRank(companyId, rankType) {
         
         const response = await fetch(endpoint, {
             method: 'POST',
+            headers: {
+                'Accept': 'application/json'
+            },
             body: formData
         });
         
