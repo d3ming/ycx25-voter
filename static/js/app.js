@@ -141,14 +141,16 @@ async function submitVote(companyId) {
 
 // Show vote input when clicking on vote display
 function showVoteInput(companyId) {
-    const displayElem = document.getElementById('voteDisplay' + companyId);
-    const formElem = document.getElementById('voteForm' + companyId);
-    const inputElem = document.getElementById('voteInput' + companyId);
+    const displayElem = document.getElementById('rankDisplay' + companyId);
+    const inputContainer = document.getElementById('rankInputContainer' + companyId);
+    const inputElem = document.getElementById('rankInput' + companyId);
     
-    displayElem.classList.add('hidden');
-    formElem.classList.remove('hidden');
-    inputElem.focus();
-    inputElem.select();
+    if (displayElem && inputContainer && inputElem) {
+        displayElem.classList.add('hidden');
+        inputContainer.classList.remove('hidden');
+        inputElem.focus();
+        inputElem.select();
+    }
 }
 
 // Handle Enter key in vote input
@@ -162,6 +164,78 @@ function handleEnterKey(event, companyId) {
 // Handle blur event on vote input
 function handleVoteBlur(companyId) {
     submitVote(companyId);
+}
+
+// Function to submit vote/rank update
+async function submitVote(companyId) {
+    try {
+        const rankInput = document.getElementById(`rankInput${companyId}`);
+        const rankDisplay = document.getElementById(`rankDisplay${companyId}`);
+        const inputContainer = document.getElementById(`rankInputContainer${companyId}`);
+        
+        if (!rankInput || !rankDisplay || !inputContainer) {
+            console.error('Could not find rank elements for company', companyId);
+            return;
+        }
+        
+        let rankValue = parseInt(rankInput.value, 10);
+        
+        // Ensure rank is at least 1 (1 is the highest rank)
+        if (isNaN(rankValue) || rankValue < 1) {
+            rankValue = 1;
+        }
+        
+        // Update display immediately (optimistic update)
+        rankDisplay.textContent = rankValue;
+        
+        // Hide input, show display
+        rankDisplay.classList.remove('hidden');
+        inputContainer.classList.add('hidden');
+        
+        // Visual feedback for update
+        rankDisplay.style.transition = 'background-color 0.3s';
+        rankDisplay.style.backgroundColor = 'rgba(59, 130, 246, 0.3)';
+        setTimeout(() => {
+            rankDisplay.style.backgroundColor = 'transparent';
+        }, 500);
+        
+        // Make API call in background
+        const response = await fetch(`/update_rank/${companyId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Accept': 'application/json'
+            },
+            body: `rank=${rankValue}`
+        });
+        
+        if (response.ok) {
+            // Get updated data
+            const data = await response.json();
+            
+            // Update local data
+            const companyIndex = allCompaniesData.findIndex(c => c.id === companyId);
+            if (companyIndex !== -1) {
+                allCompaniesData[companyIndex].votes = data.votes;
+            }
+            
+            // Re-sort the table without full refresh
+            // We don't need to call fetchAndUpdateCompanies() because we just updated our local data
+            searchAndFilterCompanies(
+                document.getElementById('searchInput')?.value || '',
+                document.getElementById('tagFilterSelect')?.value || ''
+            );
+        } else {
+            console.error('Error updating rank:', response.statusText);
+            // Visual feedback for error
+            rankDisplay.style.backgroundColor = 'rgba(239, 68, 68, 0.3)';
+            setTimeout(() => {
+                rankDisplay.style.backgroundColor = 'transparent';
+            }, 500);
+        }
+    } catch (error) {
+        console.error('Error updating rank:', error);
+    }
 }
 
 // Function to handle tier changes using AJAX
@@ -337,49 +411,67 @@ async function loadAllCompaniesData() {
 function searchAndFilterCompanies(query = '', tags = '') {
     // If we don't have the data yet, don't filter
     if (allCompaniesData.length === 0) {
+        console.log('No companies data available for filtering');
         return;
     }
     
     console.log('Filtering locally with params:', {query, tags});
-    query = (query || '').toLowerCase();
+    query = (query || '').toLowerCase().trim();
     
     // Filter companies based on search and tag criteria
     const filteredCompanies = allCompaniesData.filter(company => {
-        // Filter by search query (name or founder)
-        const nameMatch = query ? company.name.toLowerCase().includes(query) : true;
+        // Start with the assumption that this company doesn't match
+        let shouldInclude = true;
         
-        // Check founder match
-        let founderMatch = false;
+        // If we have a search query, company must match by name OR founder
         if (query) {
-            founderMatch = company.founders.some(founder => 
-                founder.name.toLowerCase().includes(query)
-            );
-        } else {
-            founderMatch = true;
+            const nameMatch = company.name.toLowerCase().includes(query);
+            
+            let founderMatch = false;
+            if (company.founders && Array.isArray(company.founders)) {
+                founderMatch = company.founders.some(founder => 
+                    founder.name && founder.name.toLowerCase().includes(query)
+                );
+            }
+            
+            // If neither name nor founder matches the query, exclude this company
+            if (!nameMatch && !founderMatch) {
+                shouldInclude = false;
+            }
         }
         
-        // Filter by tag
-        let tagMatch = true;
-        if (tags) {
-            tagMatch = false;
-            // Parse tags if they're stored as a JSON string
+        // If we have a tag filter, the company must have that tag
+        if (shouldInclude && tags && tags !== '') {
+            // Start with the assumption that this company doesn't have the tag
+            let hasTag = false;
+            
+            // Get company tags - either as array or parse from JSON string
             if (company.tags) {
                 let companyTags = company.tags;
+                
+                // If tags is a string, try to parse it as JSON
                 if (typeof company.tags === 'string') {
                     try {
                         companyTags = JSON.parse(company.tags);
                     } catch (e) {
-                        console.error('Error parsing tags:', e);
+                        console.error('Error parsing tags for company:', company.name, e);
                         companyTags = [];
                     }
                 }
-                // Check if the selected tag is in the company's tags
-                tagMatch = Array.isArray(companyTags) && companyTags.includes(tags);
+                
+                // Check if tag exists in company tags
+                if (Array.isArray(companyTags)) {
+                    hasTag = companyTags.includes(tags);
+                }
+            }
+            
+            // If company doesn't have the tag, exclude it
+            if (!hasTag) {
+                shouldInclude = false;
             }
         }
         
-        // Include if matches any criteria
-        return nameMatch || founderMatch || tagMatch;
+        return shouldInclude;
     });
     
     console.log(`Found ${filteredCompanies.length} companies matching criteria`);
@@ -387,9 +479,138 @@ function searchAndFilterCompanies(query = '', tags = '') {
     // Update the table with filtered data
     const tableBody = document.querySelector('tbody');
     if (tableBody) {
-        // Render the filtered companies
-        renderCompanyRows(filteredCompanies, tableBody);
+        // Clear the current table
+        tableBody.innerHTML = '';
+        
+        // If no companies match the criteria
+        if (filteredCompanies.length === 0) {
+            const noResultsRow = document.createElement('tr');
+            noResultsRow.innerHTML = '<td colspan="5" class="px-3 py-5 text-center text-gray-400">No companies match your search criteria</td>';
+            tableBody.appendChild(noResultsRow);
+            return;
+        }
+        
+        // Sort companies by tier (A, B, C, D) then by votes (ascending, lower is better)
+        filteredCompanies.sort((a, b) => {
+            if (a.tier !== b.tier) {
+                // Primary sort: by tier (A, B, C, D)
+                return a.tier.localeCompare(b.tier);
+            } else {
+                // Secondary sort: by votes (lower is better)
+                return a.votes - b.votes;
+            }
+        });
+        
+        // Add each company to the table
+        filteredCompanies.forEach(company => {
+            // Create a new row
+            const row = document.createElement('tr');
+            row.className = 'company-row border-b border-dark-border';
+            
+            // Create the HTML for this company row
+            row.innerHTML = `
+                <td class="px-3 py-3 whitespace-nowrap">
+                    <div class="flex items-center space-x-2">
+                        <div class="flex items-center flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-3">
+                            <!-- Tier dropdown -->
+                            <div class="flex items-center">
+                                <select id="tierSelect${company.id}" data-company-id="${company.id}" data-original-tier="${company.tier}" class="text-sm w-12 px-1 py-1 bg-dark-accent text-gray-200 border border-dark-border rounded-md focus:outline-none focus:ring-1 focus:ring-accent-blue" onchange="handleTierChange(${company.id}, this.value)">
+                                    <option value="A" ${company.tier === 'A' ? 'selected' : ''}>A</option>
+                                    <option value="B" ${company.tier === 'B' ? 'selected' : ''}>B</option>
+                                    <option value="C" ${company.tier === 'C' ? 'selected' : ''}>C</option>
+                                    <option value="D" ${company.tier === 'D' ? 'selected' : ''}>D</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Rank display/input -->
+                            <div class="flex items-center space-x-1">
+                                <div id="rankDisplay${company.id}" class="text-sm text-gray-300 w-10 rank-display cursor-pointer" onclick="showVoteInput(${company.id})">
+                                    ${company.votes}
+                                </div>
+                                <div id="rankInputContainer${company.id}" class="hidden">
+                                    <input type="number" id="rankInput${company.id}" class="text-sm w-16 px-1 py-1 bg-dark-accent text-gray-200 border border-dark-border rounded-md focus:outline-none focus:ring-1 focus:ring-accent-blue" value="${company.votes}" min="1" onkeydown="handleEnterKey(event, ${company.id})" onblur="handleVoteBlur(${company.id})">
+                                </div>
+                                <div class="flex flex-col space-y-1">
+                                    <button class="text-xs p-1 text-gray-400 hover:text-white" onclick="handleRank(${company.id}, 'up')">▲</button>
+                                    <button class="text-xs p-1 text-gray-400 hover:text-white" onclick="handleRank(${company.id}, 'down')">▼</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+                <td class="px-3 py-3">
+                    <div class="flex flex-col">
+                        <div class="flex items-center">
+                            <a href="${company.website || '#'}" target="_blank" class="text-accent-blue hover:underline font-medium">${company.name}</a>
+                            ${company.company_linkedin ? `<a href="${company.company_linkedin}" target="_blank" class="ml-2 text-gray-400 hover:text-accent-blue"><i class="fas fa-linkedin"></i></a>` : ''}
+                        </div>
+                        <div class="text-sm text-gray-400">${company.description || ''}</div>
+                        
+                        <!-- Tags section -->
+                        <div class="flex flex-wrap mt-2 tag-container" data-company-id="${company.id}">
+                            ${renderTags(company.tags, company.id)}
+                            <button class="add-tag-btn text-xs px-2 py-1 bg-dark-accent text-gray-400 hover:text-gray-200 rounded-md ml-1">
+                                <i class="fas fa-plus-circle"></i> Add Tag
+                            </button>
+                        </div>
+                    </div>
+                </td>
+                <td class="px-3 py-3">
+                    <div class="flex flex-col">
+                        ${renderFounders(company.founders)}
+                    </div>
+                </td>
+                <td class="px-3 py-3 text-sm text-gray-400">${company.founded_year || ''}</td>
+                <td class="px-3 py-3 text-sm text-gray-400">${company.location || ''}</td>
+            `;
+            
+            tableBody.appendChild(row);
+        });
     }
+}
+
+// Helper function to render founder information
+function renderFounders(founders) {
+    if (!founders || founders.length === 0) return '';
+    
+    return founders.map(founder => {
+        return `
+            <div class="mb-1">
+                <span class="text-gray-300">${founder.name}</span>
+                ${founder.linkedin ? `<a href="${founder.linkedin}" target="_blank" class="ml-1 text-gray-400 hover:text-accent-blue"><i class="fas fa-linkedin"></i></a>` : ''}
+            </div>
+        `;
+    }).join('');
+}
+
+// Helper function to render tags
+function renderTags(tags, companyId) {
+    if (!tags) return '';
+    
+    // Parse tags if necessary
+    let tagsArray = tags;
+    if (typeof tags === 'string') {
+        try {
+            tagsArray = JSON.parse(tags);
+        } catch (e) {
+            console.error('Error parsing tags:', e);
+            return '';
+        }
+    }
+    
+    // If no tags or not an array, return empty string
+    if (!Array.isArray(tagsArray) || tagsArray.length === 0) return '';
+    
+    return tagsArray.map((tag, index) => {
+        return `
+            <div class="text-xs px-2 py-1 bg-gray-700 text-gray-300 rounded-md mr-1 mb-1 flex items-center">
+                <span>${tag}</span>
+                <button class="ml-1 text-gray-400 hover:text-white" onclick="removeTag(${companyId}, ${index})">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+    }).join('');
 }
 
 // Set up event listeners for tag management when document is loaded
