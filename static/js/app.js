@@ -68,8 +68,18 @@ async function handleRank(companyId, rankType) {
                     rankDisplayElement.textContent = data.rank;
                 }
                 
-                // Refresh the table to update the sorting order without page refresh
-                fetchAndUpdateCompanies();
+                // Update local data
+                const companyIndex = allCompaniesData.findIndex(c => c.id === parseInt(companyId));
+                if (companyIndex !== -1) {
+                    allCompaniesData[companyIndex].rank = data.rank;
+                    allCompaniesData[companyIndex].votes = data.rank; // Ensure both fields are updated
+                }
+                
+                // Re-sort and redraw the table without full data refresh from server
+                const searchQuery = document.getElementById('searchInput')?.value || '';
+                const tagFilter = document.getElementById('tagFilterSelect')?.value || '';
+                const tierFilter = document.getElementById('tierFilterSelect')?.value || '';
+                searchAndFilterCompanies(searchQuery, tagFilter, tierFilter);
             } catch (jsonError) {
                 console.error('Error parsing JSON response:', jsonError);
                 // Keep the optimistic update
