@@ -77,24 +77,29 @@ async function handleRank(companyId, rankType) {
     }
 }
 
-// Function to handle manual vote setting
+// Function to handle manual rank setting
 async function submitVote(companyId) {
     try {
-        const voteInput = document.getElementById(`voteInput${companyId}`);
-        const voteValue = parseInt(voteInput.value, 10);
-        const voteDisplay = document.getElementById(`voteDisplay${companyId}`);
+        const rankInput = document.getElementById(`voteInput${companyId}`);
+        let rankValue = parseInt(rankInput.value, 10);
+        const rankDisplay = document.getElementById(`voteDisplay${companyId}`);
+        
+        // Ensure rank is at least 1 (1 is the highest rank)
+        if (rankValue < 1) {
+            rankValue = 1;
+        }
         
         // Update display immediately (optimistic update)
-        voteDisplay.textContent = voteValue;
+        rankDisplay.textContent = rankValue;
         
         // Hide input, show display
-        voteDisplay.classList.remove('hidden');
+        rankDisplay.classList.remove('hidden');
         document.getElementById(`voteForm${companyId}`).classList.add('hidden');
         
         // Flash effect immediately for responsiveness
-        voteDisplay.classList.add('vote-updated');
+        rankDisplay.classList.add('vote-updated');
         setTimeout(() => {
-            voteDisplay.classList.remove('vote-updated');
+            rankDisplay.classList.remove('vote-updated');
         }, 500);
         
         // Make API call in background
@@ -104,7 +109,7 @@ async function submitVote(companyId) {
                 'Content-Type': 'application/x-www-form-urlencoded',
                 'Accept': 'application/json'
             },
-            body: `rank=${voteValue}`
+            body: `rank=${rankValue}`
         });
         
         if (response.ok) {
@@ -112,15 +117,15 @@ async function submitVote(companyId) {
             const data = await response.json();
             
             // Update display only if different from our optimistic update
-            if (data.votes !== voteValue) {
-                voteDisplay.textContent = data.votes;
+            if (data.votes !== rankValue) {
+                rankDisplay.textContent = data.votes;
             }
         } else {
-            console.error('Error updating vote:', response.statusText);
+            console.error('Error updating rank:', response.statusText);
             // Show error indicator
-            voteDisplay.classList.add('vote-error');
+            rankDisplay.classList.add('vote-error');
             setTimeout(() => {
-                voteDisplay.classList.remove('vote-error');
+                rankDisplay.classList.remove('vote-error');
             }, 500);
         }
     } catch (error) {

@@ -181,15 +181,15 @@ async def update_rank(
 
 @app.post("/upvote/{company_id}")
 async def upvote(request: Request, company_id: int, db: Session = Depends(get_db)):
-    """Upvote a company"""
+    """For ranking: When we upvote, we actually decrease the rank (higher number = worse rank)"""
     # Find the company in the database
     company = get_company_by_id(db, company_id)
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
     
-    # Increment votes
-    current_votes = company.votes if company.votes is not None else 0
-    setattr(company, 'votes', current_votes + 1)
+    # Increment rank number (worse rank)
+    current_rank = company.votes if company.votes is not None else 0
+    company.votes = current_rank + 1
     db.commit()
     
     # Check if it's an AJAX request or a regular form submission
@@ -212,11 +212,12 @@ async def downvote(request: Request, company_id: int, db: Session = Depends(get_
     if not company:
         raise HTTPException(status_code=404, detail="Company not found")
     
-    # Decrement votes
-    current_votes = company.votes if company.votes is not None else 0
-    # Don't allow negative votes
-    if current_votes > 0:
-        setattr(company, 'votes', max(0, current_votes - 1))
+    # For ranking: when we downvote, we actually improve the rank (lower number)
+    current_rank = company.votes if company.votes is not None else 0
+    
+    # Don't allow ranks below 1 (1 is the highest rank)
+    if current_rank > 1:
+        company.votes = current_rank - 1
         db.commit()
     
     # Check if it's an AJAX request or a regular form submission
