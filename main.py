@@ -192,51 +192,74 @@ async def update_rank(
     db: Session = Depends(get_db)
 ):
     """Update votes for a company"""
-    # Find the company in the database
-    company = get_company_by_id(db, company_id)
-    if not company:
-        raise HTTPException(status_code=404, detail="Company not found")
-    
-    # Update votes
-    setattr(company, 'votes', rank)
-    db.commit()
-    
-    # Check if it's an AJAX request or a regular form submission
-    is_ajax = request.headers.get("accept") == "application/json"
-    
-    if is_ajax:
-        return JSONResponse({
-            "success": True,
-            "votes": company.votes,
-            "company_id": company_id
-        })
-    else:
-        return RedirectResponse(url="/", status_code=303)
+    try:
+        # Validate input
+        if rank < 1:
+            raise HTTPException(status_code=422, detail="Rank must be at least 1")
+            
+        # Find the company in the database using standard try-except error handling
+        company = get_company_by_id(db, company_id)
+        if not company:
+            raise HTTPException(status_code=404, detail="Company not found")
+        
+        # Update votes using direct attribute modification 
+        # instead of setattr to avoid SQLAlchemy typing issues
+        company.votes = rank
+        db.add(company)  # Explicitly add the modified object back
+        db.commit()
+        db.refresh(company)  # Refresh to ensure we have the updated data
+        
+        # Check if it's an AJAX request or a regular form submission
+        is_ajax = request.headers.get("accept") == "application/json"
+        
+        if is_ajax:
+            return JSONResponse({
+                "success": True,
+                "votes": company.votes,
+                "company_id": company_id
+            })
+        else:
+            return RedirectResponse(url="/", status_code=303)
+            
+    except Exception as e:
+        db.rollback()  # Rollback any changes on error
+        # Log the error for debugging
+        print(f"Error updating rank: {e}")
+        # Return a user-friendly error
+        raise HTTPException(status_code=500, detail=f"Failed to update rank: {str(e)}")
 
 @app.post("/upvote/{company_id}")
 async def upvote(request: Request, company_id: int, db: Session = Depends(get_db)):
     """For ranking: When we upvote, we actually decrease the rank (higher number = worse rank)"""
-    # Find the company in the database
-    company = get_company_by_id(db, company_id)
-    if not company:
-        raise HTTPException(status_code=404, detail="Company not found")
-    
-    # Increment rank number (worse rank)
-    current_rank = company.votes if company.votes is not None else 0
-    company.votes = current_rank + 1
-    db.commit()
-    
-    # Check if it's an AJAX request or a regular form submission
-    is_ajax = request.headers.get("accept") == "application/json"
-    
-    if is_ajax:
-        return JSONResponse({
-            "success": True,
-            "votes": company.votes,
-            "company_id": company_id
-        })
-    else:
-        return RedirectResponse(url="/", status_code=303)
+    try:
+        # Find the company in the database
+        company = get_company_by_id(db, company_id)
+        if not company:
+            raise HTTPException(status_code=404, detail="Company not found")
+        
+        # Increment rank number (worse rank)
+        current_rank = company.votes if company.votes is not None else 0
+        company.votes = current_rank + 1
+        db.add(company)  # Explicitly add the modified object
+        db.commit()
+        db.refresh(company)  # Ensure we have updated data
+        
+        # Check if it's an AJAX request or a regular form submission
+        is_ajax = request.headers.get("accept") == "application/json"
+        
+        if is_ajax:
+            return JSONResponse({
+                "success": True,
+                "votes": company.votes,
+                "company_id": company_id
+            })
+        else:
+            return RedirectResponse(url="/", status_code=303)
+            
+    except Exception as e:
+        db.rollback()  # Rollback any changes on error
+        print(f"Error in upvote: {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to upvote: {str(e)}")
 
 @app.post("/downvote/{company_id}")
 async def downvote(request: Request, company_id: int, db: Session = Depends(get_db)):
