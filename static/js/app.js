@@ -61,6 +61,9 @@ async function handleRank(companyId, rankType) {
             if (data.votes !== newRank) {
                 rankDisplayElement.textContent = data.votes;
             }
+            
+            // Refresh the table to update the sorting order without page refresh
+            fetchAndUpdateCompanies();
         } else {
             // If there was an error, rollback to original value
             console.error('Error updating rank:', response.statusText);
@@ -120,6 +123,9 @@ async function submitVote(companyId) {
             if (data.votes !== rankValue) {
                 rankDisplay.textContent = data.votes;
             }
+            
+            // Refresh the table to update the sorting order without page refresh
+            fetchAndUpdateCompanies();
         } else {
             console.error('Error updating rank:', response.statusText);
             // Show error indicator
