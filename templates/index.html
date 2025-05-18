@@ -4,21 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>YC X25 Batch Explorer</title>
-    <link rel="stylesheet" href="/static/css/tailwind.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <style>
-        /* Custom Tailwind theme colors */
-        :root {
-            --color-dark-bg: #121212;
-            --color-dark-card: #1E1E1E;
-            --color-dark-header: #252525;
-            --color-dark-accent: #1F2937;
-            --color-dark-border: #333333;
-            --color-accent-blue: #3B82F6;
-            --color-accent-green: #10B981;
-            --color-accent-red: #EF4444;
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        'dark-bg': '#121212',
+                        'dark-card': '#1E1E1E',
+                        'dark-header': '#252525',
+                        'dark-accent': '#1F2937',
+                        'dark-border': '#333333',
+                        'accent-blue': '#3B82F6',
+                        'accent-green': '#10B981',
+                        'accent-red': '#EF4444',
+                    }
+                }
+            }
         }
-    </style>
+    </script>
     <script>
         // Show the input field and hide the display span
         function showVoteInput(companyId) {
@@ -105,8 +111,8 @@
         }
     </style>
 </head>
-<body class="bg-gray-900 text-gray-200 dark">
-    <header class="bg-gray-800 border-b border-gray-700 sticky top-0 z-10 shadow-md">
+<body class="bg-dark-bg text-gray-200 dark">
+    <header class="bg-dark-header border-b border-dark-border sticky top-0 z-10 shadow-md">
         <div class="max-w-7xl mx-auto px-4 py-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center">
             <h1 class="text-2xl font-bold text-white mb-2 sm:mb-0">
                 <span class="text-accent-blue">YC</span> X25 Batch Companies
@@ -212,6 +218,18 @@
             <p class="text-xs text-gray-500 text-center">YC X25 Batch Explorer for Angel Investors</p>
         </div>
     </footer>
+    
+    <!-- Preload JavaScript for performance -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Preload any essential resources
+            preloadImages();
+        });
+        
+        function preloadImages() {
+            // Preload any images that might be needed for interactions
+        }
+    </script>
     
     <!-- Load the AJAX voting script -->
     <script src="/static/js/app.js"></script>

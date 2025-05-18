@@ -216,7 +216,7 @@ async def downvote(request: Request, company_id: int, db: Session = Depends(get_
     current_votes = company.votes if company.votes is not None else 0
     # Don't allow negative votes
     if current_votes > 0:
-        company.votes = current_votes - 1
+        setattr(company, 'votes', max(0, current_votes - 1))
         db.commit()
     
     # Check if it's an AJAX request or a regular form submission
