@@ -42,6 +42,7 @@ class Company(Base):
             founders = []
             
         return {
+            "id": self.id,  # Add ID field for API calls
             "name": self.name,
             "url": self.url,
             "description": self.description,
@@ -49,6 +50,7 @@ class Company(Base):
             "company_linkedin": self.company_linkedin,
             "founders": founders,
             "rank": self.votes,  # Keep 'rank' for backward compatibility
+            "votes": self.votes,  # Add votes field for consistency
             "founded_year": self.founded_year,
             "location": self.location,
             "short_description": self.short_description
