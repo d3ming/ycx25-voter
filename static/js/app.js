@@ -264,8 +264,18 @@ async function addTag(companyId, tagText) {
         if (response.ok) {
             const data = await response.json();
             if (data.success) {
-                // Refresh the table to show the new tag
-                fetchAndUpdateCompanies();
+                // Instead of fetching all companies again, update our local data
+                // Reload all companies data to get the updated tags
+                await loadAllCompaniesData();
+                
+                // Update the tag dropdown with new tags
+                const allTags = collectAllTags(allCompaniesData);
+                updateTagFilterOptions(allTags);
+                
+                // Reapply current filters
+                const searchQuery = document.getElementById('searchInput').value;
+                const tagFilter = document.getElementById('tagFilterSelect').value;
+                searchAndFilterCompanies(searchQuery, tagFilter);
             }
         }
     } catch (error) {
@@ -283,8 +293,18 @@ async function removeTag(companyId, tagIndex) {
         if (response.ok) {
             const data = await response.json();
             if (data.success) {
-                // Refresh the table to update tags
-                fetchAndUpdateCompanies();
+                // Instead of fetching all companies again, update our local data
+                // Reload all companies data to get the updated tags
+                await loadAllCompaniesData();
+                
+                // Update the tag dropdown with current tags
+                const allTags = collectAllTags(allCompaniesData);
+                updateTagFilterOptions(allTags);
+                
+                // Reapply current filters
+                const searchQuery = document.getElementById('searchInput').value;
+                const tagFilter = document.getElementById('tagFilterSelect').value;
+                searchAndFilterCompanies(searchQuery, tagFilter);
             }
         }
     } catch (error) {
@@ -292,54 +312,84 @@ async function removeTag(companyId, tagIndex) {
     }
 }
 
-// Function to search and filter companies
-async function searchAndFilterCompanies(query = '', tags = '') {
+// Store all companies data in memory for client-side filtering
+let allCompaniesData = [];
+
+// Function to load all companies data once
+async function loadAllCompaniesData() {
     try {
-        // Construct the query string
-        const params = new URLSearchParams();
-        if (query) params.append('query', query);
-        if (tags) params.append('tags', tags);
-        
-        console.log('Searching with params:', {query, tags});
-        
-        // Fetch filtered companies from API
-        const response = await fetch(`/api/search?${params.toString()}`, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json'
-            }
-        });
-        
+        const response = await fetch('/api/companies');
         if (response.ok) {
-            const companiesData = await response.json();
-            console.log(`Found ${companiesData.length} companies matching criteria`);
-            
-            // Update the table with filtered data
-            const tableBody = document.querySelector('tbody');
-            if (tableBody) {
-                // Render the filtered companies
-                renderCompanyRows(companiesData, tableBody);
-            }
+            allCompaniesData = await response.json();
+            console.log(`Loaded ${allCompaniesData.length} companies for client-side filtering`);
+            return allCompaniesData;
         } else {
-            console.error('Error searching companies:', response.statusText);
+            console.error('Error loading companies data:', response.statusText);
+            return [];
         }
     } catch (error) {
-        console.error('Error:', error);
+        console.error('Error loading companies data:', error);
+        return [];
+    }
+}
+
+// Function to search and filter companies on the client side
+function searchAndFilterCompanies(query = '', tags = '') {
+    // If we don't have the data yet, don't filter
+    if (allCompaniesData.length === 0) {
+        return;
+    }
+    
+    console.log('Filtering locally with params:', {query, tags});
+    query = (query || '').toLowerCase();
+    
+    // Filter companies based on search and tag criteria
+    const filteredCompanies = allCompaniesData.filter(company => {
+        // Filter by search query (name or founder)
+        const nameMatch = query ? company.name.toLowerCase().includes(query) : true;
+        
+        // Check founder match
+        let founderMatch = false;
+        if (query) {
+            founderMatch = company.founders.some(founder => 
+                founder.name.toLowerCase().includes(query)
+            );
+        } else {
+            founderMatch = true;
+        }
+        
+        // Filter by tag
+        const tagMatch = !tags || (company.tags && company.tags.includes(tags));
+        
+        // Include if matches any criteria
+        return nameMatch || founderMatch || tagMatch;
+    });
+    
+    console.log(`Found ${filteredCompanies.length} companies matching criteria`);
+    
+    // Update the table with filtered data
+    const tableBody = document.querySelector('tbody');
+    if (tableBody) {
+        // Render the filtered companies
+        renderCompanyRows(filteredCompanies, tableBody);
     }
 }
 
 // Set up event listeners for tag management when document is loaded
 document.addEventListener('DOMContentLoaded', async function() {
-    // Initialize the tag filter dropdown with all available tags
+    // Load all companies data once for client-side filtering
     try {
-        const response = await fetch('/api/companies');
-        if (response.ok) {
-            const companiesData = await response.json();
-            const allTags = collectAllTags(companiesData);
-            updateTagFilterOptions(allTags);
-        }
+        // Load all companies data
+        await loadAllCompaniesData();
+        
+        // Set up tag filter dropdown with all available tags
+        const allTags = collectAllTags(allCompaniesData);
+        updateTagFilterOptions(allTags);
+        
+        // Initial rendering of all companies
+        searchAndFilterCompanies();
     } catch (error) {
-        console.error('Error initializing tag filter:', error);
+        console.error('Error initializing data:', error);
     }
     // Add tag buttons
     document.addEventListener('click', function(e) {
@@ -399,16 +449,21 @@ document.addEventListener('DOMContentLoaded', async function() {
         };
     }
     
-    // Search input with debouncing (300ms)
+    // Search input with debouncing (200ms)
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {
         const debouncedSearch = debounce(function() {
             const tagFilter = document.getElementById('tagFilterSelect').value;
             searchAndFilterCompanies(this.value, tagFilter);
-        }, 300);
+        }, 200);
         
         searchInput.addEventListener('input', function() {
-            // Show loading indicator or similar UI feedback
+            // Show visual feedback that filtering is happening
+            const tableBody = document.querySelector('tbody');
+            if (tableBody) {
+                tableBody.style.opacity = '0.7';
+                setTimeout(() => { tableBody.style.opacity = '1'; }, 150);
+            }
             debouncedSearch.call(this);
         });
     }
@@ -418,7 +473,15 @@ document.addEventListener('DOMContentLoaded', async function() {
     if (tagFilterSelect) {
         tagFilterSelect.addEventListener('change', function() {
             const searchQuery = document.getElementById('searchInput').value;
-            // Tag filtering is explicit user action, so no need to debounce
+            
+            // Show visual feedback
+            const tableBody = document.querySelector('tbody');
+            if (tableBody) {
+                tableBody.style.opacity = '0.7';
+                setTimeout(() => { tableBody.style.opacity = '1'; }, 150);
+            }
+            
+            // Client-side filtering is fast, so no need to debounce
             searchAndFilterCompanies(searchQuery, this.value);
         });
     }
@@ -446,7 +509,15 @@ document.addEventListener('DOMContentLoaded', async function() {
             if (searchInput) searchInput.value = '';
             if (tagFilterSelect) tagFilterSelect.value = '';
             
-            fetchAndUpdateCompanies();
+            // Show visual feedback
+            const tableBody = document.querySelector('tbody');
+            if (tableBody) {
+                tableBody.style.opacity = '0.7';
+                setTimeout(() => { tableBody.style.opacity = '1'; }, 150);
+            }
+            
+            // Show all companies (no filters)
+            searchAndFilterCompanies();
         });
     }
 });
