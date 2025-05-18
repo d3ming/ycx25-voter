@@ -572,7 +572,7 @@ function renderFounders(founders) {
     }
     
     // Create list of founder elements without any separator between them
-    let founderElements = founders.map(founder => {
+    return founders.map(founder => {
         if (typeof founder === 'object' && founder !== null) {
             const founderName = founder.name || 'Unknown';
             const linkedin = founder.linkedin || null;
