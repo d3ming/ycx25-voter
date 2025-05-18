@@ -389,6 +389,92 @@ async function removeTag(companyId, tagIndex) {
 // Store all companies data in memory for client-side filtering
 let allCompaniesData = [];
 
+/**
+ * Renders company rows in the table - this function is needed by other parts of the code
+ * @param {Array} companies - Array of company objects to render
+ * @param {HTMLElement} tableBody - The table body element to render into
+ */
+function renderCompanyRows(companies, tableBody) {
+    if (!tableBody) return;
+    
+    // Clear the table body
+    tableBody.innerHTML = '';
+    
+    // Handle empty results
+    if (companies.length === 0) {
+        const noResultsRow = document.createElement('tr');
+        noResultsRow.innerHTML = '<td colspan="5" class="px-3 py-5 text-center text-gray-400">No companies match your search criteria</td>';
+        tableBody.appendChild(noResultsRow);
+        return;
+    }
+    
+    // Add each company to the table
+    companies.forEach(company => {
+        const row = document.createElement('tr');
+        row.className = 'company-row border-b border-dark-border';
+        row.dataset.companyId = company.id;
+        
+        // Create the HTML for the row
+        row.innerHTML = `
+            <td class="px-3 py-3 whitespace-nowrap">
+                <div class="flex items-center space-x-2">
+                    <div class="flex items-center flex-col md:flex-row space-y-2 md:space-y-0 md:space-x-3">
+                        <!-- Tier dropdown -->
+                        <div class="flex items-center">
+                            <select id="tierSelect${company.id}" data-company-id="${company.id}" data-original-tier="${company.tier}" class="text-sm w-12 px-1 py-1 bg-dark-accent text-gray-200 border border-dark-border rounded-md focus:outline-none focus:ring-1 focus:ring-accent-blue" onchange="handleTierChange(${company.id}, this.value)">
+                                <option value="A" ${company.tier === 'A' ? 'selected' : ''}>A</option>
+                                <option value="B" ${company.tier === 'B' ? 'selected' : ''}>B</option>
+                                <option value="C" ${company.tier === 'C' ? 'selected' : ''}>C</option>
+                                <option value="D" ${company.tier === 'D' ? 'selected' : ''}>D</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Rank display/input -->
+                        <div class="flex items-center space-x-1">
+                            <div id="rankDisplay${company.id}" class="text-sm text-gray-300 w-10 rank-display cursor-pointer" onclick="showVoteInput(${company.id})">
+                                ${company.votes}
+                            </div>
+                            <div id="rankInputContainer${company.id}" class="hidden">
+                                <input type="number" id="rankInput${company.id}" class="text-sm w-16 px-1 py-1 bg-dark-accent text-gray-200 border border-dark-border rounded-md focus:outline-none focus:ring-1 focus:ring-accent-blue" value="${company.votes}" min="1" onkeydown="handleEnterKey(event, ${company.id})" onblur="handleVoteBlur(${company.id})">
+                            </div>
+                            <div class="flex flex-col space-y-1">
+                                <button class="text-xs p-1 text-gray-400 hover:text-white" onclick="handleRank(${company.id}, 'up')">▲</button>
+                                <button class="text-xs p-1 text-gray-400 hover:text-white" onclick="handleRank(${company.id}, 'down')">▼</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </td>
+            <td class="px-3 py-3">
+                <div class="flex flex-col">
+                    <div class="flex items-center">
+                        <a href="${company.website || '#'}" target="_blank" class="text-accent-blue hover:underline font-medium">${company.name}</a>
+                        ${company.company_linkedin ? `<a href="${company.company_linkedin}" target="_blank" class="ml-2 text-gray-400 hover:text-accent-blue"><i class="fas fa-linkedin"></i></a>` : ''}
+                    </div>
+                    <div class="text-sm text-gray-400">${company.description || ''}</div>
+                    
+                    <!-- Tags section -->
+                    <div class="flex flex-wrap mt-2 tag-container" data-company-id="${company.id}">
+                        ${renderTags(company.tags, company.id)}
+                        <button class="add-tag-btn text-xs px-2 py-1 bg-dark-accent text-gray-400 hover:text-gray-200 rounded-md ml-1">
+                            <i class="fas fa-plus-circle"></i> Add Tag
+                        </button>
+                    </div>
+                </div>
+            </td>
+            <td class="px-3 py-3">
+                <div class="flex flex-col">
+                    ${renderFounders(company.founders)}
+                </div>
+            </td>
+            <td class="px-3 py-3 text-sm text-gray-400">${company.founded_year || ''}</td>
+            <td class="px-3 py-3 text-sm text-gray-400">${company.location || ''}</td>
+        `;
+        
+        tableBody.appendChild(row);
+    });
+}
+
 // Function to load all companies data once
 async function loadAllCompaniesData() {
     try {
@@ -420,13 +506,19 @@ function searchAndFilterCompanies(query = '', tags = '') {
     
     // Filter companies based on search and tag criteria
     const filteredCompanies = allCompaniesData.filter(company => {
-        // Start with the assumption that this company doesn't match
-        let shouldInclude = true;
+        // If no filters are applied, include all companies
+        if (!query && !tags) {
+            return true;
+        }
         
-        // If we have a search query, company must match by name OR founder
+        let matches = true;
+        
+        // If we have a search query, check if company name or founder matches
         if (query) {
+            // Check if company name includes the search query
             const nameMatch = company.name.toLowerCase().includes(query);
             
+            // Check if any founder name includes the search query
             let founderMatch = false;
             if (company.founders && Array.isArray(company.founders)) {
                 founderMatch = company.founders.some(founder => 
@@ -434,32 +526,42 @@ function searchAndFilterCompanies(query = '', tags = '') {
                 );
             }
             
-            // If neither name nor founder matches the query, exclude this company
+            // Company must match by name OR founder when searching
             if (!nameMatch && !founderMatch) {
-                shouldInclude = false;
+                matches = false;
             }
         }
         
-        // If we have a tag filter, the company must have that tag
-        if (shouldInclude && tags && tags !== '') {
-            // Start with the assumption that this company doesn't have the tag
+        // If we have a tag filter, check if company has the tag
+        if (tags && matches) { // Only check tags if company still matches after query filter
             let hasTag = false;
             
-            // Get company tags - either as array or parse from JSON string
+            // Parse tags if needed
             if (company.tags) {
-                let companyTags = company.tags;
+                let companyTags = [];
                 
-                // If tags is a string, try to parse it as JSON
-                if (typeof company.tags === 'string') {
+                // Handle tags whether they're an array or a JSON string
+                if (Array.isArray(company.tags)) {
+                    companyTags = company.tags;
+                } else if (typeof company.tags === 'string') {
                     try {
+                        // Try to parse as JSON
                         companyTags = JSON.parse(company.tags);
+                        
+                        // If it's not an array after parsing, convert to array
+                        if (!Array.isArray(companyTags)) {
+                            companyTags = [companyTags];
+                        }
                     } catch (e) {
-                        console.error('Error parsing tags for company:', company.name, e);
-                        companyTags = [];
+                        // If parsing fails, use as a single string tag
+                        console.log('Tags not JSON for company:', company.name, company.tags);
+                        if (company.tags.trim()) {
+                            companyTags = [company.tags.trim()];
+                        }
                     }
                 }
                 
-                // Check if tag exists in company tags
+                // Check if the selected tag is in the company's tags
                 if (Array.isArray(companyTags)) {
                     hasTag = companyTags.includes(tags);
                 }
@@ -467,11 +569,11 @@ function searchAndFilterCompanies(query = '', tags = '') {
             
             // If company doesn't have the tag, exclude it
             if (!hasTag) {
-                shouldInclude = false;
+                matches = false;
             }
         }
         
-        return shouldInclude;
+        return matches;
     });
     
     console.log(`Found ${filteredCompanies.length} companies matching criteria`);
@@ -585,6 +687,7 @@ function renderFounders(founders) {
 
 // Helper function to render tags
 function renderTags(tags, companyId) {
+    // If no tags provided, return empty string
     if (!tags) return '';
     
     // Parse tags if necessary
@@ -593,8 +696,13 @@ function renderTags(tags, companyId) {
         try {
             tagsArray = JSON.parse(tags);
         } catch (e) {
-            console.error('Error parsing tags:', e);
-            return '';
+            console.error('Error parsing tags for company:', companyId, e);
+            // If parsing fails, try to use it as a single tag if non-empty
+            if (tags.trim()) {
+                tagsArray = [tags.trim()];
+            } else {
+                return '';
+            }
         }
     }
     
@@ -605,7 +713,7 @@ function renderTags(tags, companyId) {
         return `
             <div class="text-xs px-2 py-1 bg-gray-700 text-gray-300 rounded-md mr-1 mb-1 flex items-center">
                 <span>${tag}</span>
-                <button class="ml-1 text-gray-400 hover:text-white" onclick="removeTag(${companyId}, ${index})">
+                <button class="ml-1 text-gray-400 hover:text-white remove-tag-btn" data-company-id="${companyId}" data-tag-index="${index}" onclick="removeTag(${companyId}, ${index})">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
