@@ -1,15 +1,26 @@
 // Function to handle voting through AJAX
 async function handleVote(companyId, voteType) {
     try {
-        console.log(`Sending vote to endpoint: /${voteType}vote/${companyId} for company: ${companyId}`);
+        // Get the current vote count element
+        const voteDisplayElement = document.getElementById(`voteDisplay${companyId}`);
+        
+        // Get current vote value
+        const currentVotes = parseInt(voteDisplayElement.textContent || '0', 10);
+        
+        // Update UI immediately for responsive feel (optimistic update)
+        const newVotes = voteType === 'up' ? currentVotes + 1 : Math.max(0, currentVotes - 1);
+        voteDisplayElement.textContent = newVotes;
+        
+        // Show feedback animation right away
+        voteDisplayElement.classList.add('vote-updated');
+        setTimeout(() => {
+            voteDisplayElement.classList.remove('vote-updated');
+        }, 500);
         
         // Determine the endpoint based on vote type
         const endpoint = voteType === 'up' ? `/upvote/${companyId}` : `/downvote/${companyId}`;
         
-        // Get the current vote count element
-        const voteDisplayElement = document.getElementById(`voteDisplay${companyId}`);
-        
-        // Make API call
+        // Make API call in background
         const response = await fetch(endpoint, {
             method: 'POST',
             headers: {
@@ -19,19 +30,23 @@ async function handleVote(companyId, voteType) {
         });
         
         if (response.ok) {
-            // Get the updated vote count
+            // Get the actual updated vote count from server
             const data = await response.json();
             
-            // Update the vote display
-            voteDisplayElement.textContent = data.votes;
-            
-            // Flash effect to show success
-            voteDisplayElement.classList.add('vote-updated');
-            setTimeout(() => {
-                voteDisplayElement.classList.remove('vote-updated');
-            }, 500);
+            // Update to server value (only if different from our optimistic update)
+            if (data.votes !== newVotes) {
+                voteDisplayElement.textContent = data.votes;
+            }
         } else {
+            // If there was an error, rollback to original value
             console.error('Error updating vote:', response.statusText);
+            voteDisplayElement.textContent = currentVotes;
+            
+            // Show error indicator
+            voteDisplayElement.classList.add('vote-error');
+            setTimeout(() => {
+                voteDisplayElement.classList.remove('vote-error');
+            }, 500);
         }
     } catch (error) {
         console.error('Error:', error);
@@ -45,7 +60,20 @@ async function submitVote(companyId) {
         const voteValue = parseInt(voteInput.value, 10);
         const voteDisplay = document.getElementById(`voteDisplay${companyId}`);
         
-        // Make API call to update rank
+        // Update display immediately (optimistic update)
+        voteDisplay.textContent = voteValue;
+        
+        // Hide input, show display
+        voteDisplay.classList.remove('hidden');
+        document.getElementById(`voteForm${companyId}`).classList.add('hidden');
+        
+        // Flash effect immediately for responsiveness
+        voteDisplay.classList.add('vote-updated');
+        setTimeout(() => {
+            voteDisplay.classList.remove('vote-updated');
+        }, 500);
+        
+        // Make API call in background
         const response = await fetch(`/update_rank/${companyId}`, {
             method: 'POST',
             headers: {
@@ -59,20 +87,17 @@ async function submitVote(companyId) {
             // Get updated data
             const data = await response.json();
             
-            // Update display
-            voteDisplay.textContent = data.votes;
-            
-            // Hide input, show display
-            voteDisplay.classList.remove('hidden');
-            document.getElementById(`voteForm${companyId}`).classList.add('hidden');
-            
-            // Flash effect
-            voteDisplay.classList.add('vote-updated');
-            setTimeout(() => {
-                voteDisplay.classList.remove('vote-updated');
-            }, 500);
+            // Update display only if different from our optimistic update
+            if (data.votes !== voteValue) {
+                voteDisplay.textContent = data.votes;
+            }
         } else {
             console.error('Error updating vote:', response.statusText);
+            // Show error indicator
+            voteDisplay.classList.add('vote-error');
+            setTimeout(() => {
+                voteDisplay.classList.remove('vote-error');
+            }, 500);
         }
     } catch (error) {
         console.error('Error:', error);
