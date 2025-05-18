@@ -571,30 +571,31 @@ function renderFounders(founders) {
         return '<span class="text-gray-500">No founder info</span>';
     }
     
-    // Create list of founder elements without any separator between them
-    return founders.map(founder => {
+    // Create a cleaner HTML structure for the founders list
+    let html = '<div class="founder-list">';
+    
+    founders.forEach(founder => {
         if (typeof founder === 'object' && founder !== null) {
             const founderName = founder.name || 'Unknown';
             const linkedin = founder.linkedin || null;
             
+            html += '<div class="flex items-center mb-1">';
+            html += `<span class="text-sm text-gray-300">${founderName}</span>`;
+            
             if (linkedin) {
-                return `
-                    <div class="flex items-center mb-1">
-                        <span class="text-sm text-gray-300">${founderName}</span>
-                        <a href="${linkedin}" target="_blank" class="ml-2 text-blue-500 hover:text-blue-400 transition-colors duration-200">
-                            <i class="fab fa-linkedin text-xs"></i>
-                        </a>
-                    </div>
+                html += `
+                    <a href="${linkedin}" target="_blank" class="ml-2 text-blue-500 hover:text-blue-400 transition-colors duration-200">
+                        <i class="fab fa-linkedin text-xs"></i>
+                    </a>
                 `;
-            } else {
-                return `<div class="mb-1"><span class="text-sm text-gray-300">${founderName}</span></div>`;
             }
-        } else if (typeof founder === 'string') {
-            return `<div class="mb-1"><span class="text-sm text-gray-300">${founder}</span></div>`;
+            
+            html += '</div>';
         }
-        
-        return '';
-    }).join('');
+    });
+    
+    html += '</div>';
+    return html;
 }
 
 // Helper function to render tags
