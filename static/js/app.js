@@ -270,8 +270,17 @@ async function handleTierChange(companyId, tier) {
             // Store the new tier as the original for future reference
             tierSelect.setAttribute('data-original-tier', data.tier);
             
-            // Fetch updated companies data to refresh the table
-            fetchAndUpdateCompanies();
+            // Update local data instead of fetching everything again
+            const companyIndex = allCompaniesData.findIndex(c => c.id === companyId);
+            if (companyIndex !== -1) {
+                allCompaniesData[companyIndex].tier = data.tier;
+            }
+            
+            // Re-apply current filters without full data refresh
+            const searchQuery = document.getElementById('searchInput')?.value || '';
+            const tagFilter = document.getElementById('tagFilterSelect')?.value || '';
+            const tierFilter = document.getElementById('tierFilterSelect')?.value || '';
+            searchAndFilterCompanies(searchQuery, tagFilter, tierFilter);
         } else {
             console.error('Error updating tier:', response.statusText);
             
