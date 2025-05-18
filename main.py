@@ -211,7 +211,8 @@ async def update_rank(
     if is_ajax:
         return JSONResponse({
             "success": True,
-            "votes": rank,
+            "rank": rank,
+            "votes": rank,  # Keep for backward compatibility
             "company_id": company_id
         })
     else:
@@ -252,7 +253,8 @@ async def upvote(request: Request, company_id: int, db: Session = Depends(get_db
     if is_ajax:
         return JSONResponse({
             "success": True,
-            "votes": new_rank,
+            "rank": new_rank,
+            "votes": new_rank,  # Keep for backward compatibility
             "company_id": company_id
         })
     else:
