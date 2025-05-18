@@ -374,16 +374,16 @@ async def api_companies(request: Request, db: Session = Depends(get_db)):
         # If we have rank but no votes, create votes field
         elif 'rank' in company and ('votes' not in company or company['votes'] is None):
             company['votes'] = company['rank']
-        # If both are None or 0, set to a high value
+        # If both are None or 0, set to a moderate value
         if ('rank' not in company or company['rank'] == 0) and ('votes' not in company or company['votes'] == 0):
-            company['rank'] = company['votes'] = 999  # Default high rank for unranked
+            company['rank'] = company['votes'] = 9  # Default moderate rank for unranked
     
     # Sort companies first by tier (A,B,C,D) and then by rank (lowest first)
     sorted_companies = sorted(companies, key=lambda x: (
         # Tier sorting (A,B,C,D)
         get_tier_index(x.get('tier', 'C')),
         # Rank sorting (1,2,3...) - use votes for ranking
-        int(x.get('votes', 999)) if x.get('votes', 0) > 0 else 999
+        int(x.get('votes', 9)) if x.get('votes', 0) > 0 else 9
     ))
     
     return sorted_companies
