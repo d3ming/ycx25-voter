@@ -681,25 +681,35 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Set up clear filters button
     const clearFiltersButton = document.getElementById('clearFiltersBtn');
+    console.log("Clear filters button found:", clearFiltersButton);
+    
     if (clearFiltersButton) {
         clearFiltersButton.addEventListener('click', () => {
+            console.log("Clear filters button clicked!");
+            
             // Reset search input
             if (searchInput) {
+                console.log("Resetting search input");
                 searchInput.value = '';
             }
             
             // Reset tag filter
             if (tagFilterSelect) {
+                console.log("Resetting tag filter");
                 tagFilterSelect.value = '';
             }
             
             // Reset tier filter
             if (tierFilterSelect) {
+                console.log("Resetting tier filter");
                 tierFilterSelect.value = '';
             }
             
             // Apply the cleared filters to show all companies
+            console.log("Applying cleared filters");
             searchAndFilterCompanies('', '', '');
         });
+    } else {
+        console.error("Clear filters button not found in DOM!");
     }
 });
