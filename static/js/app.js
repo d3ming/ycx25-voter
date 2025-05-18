@@ -664,7 +664,7 @@ function searchAndFilterCompanies(query = '', tags = '', tier = '') {
                     <div class="flex flex-col">
                         <div class="flex items-center">
                             <a href="${company.website || '#'}" target="_blank" class="text-accent-blue hover:underline font-medium">${company.name}</a>
-                            ${company.company_linkedin ? `<a href="${company.company_linkedin}" target="_blank" class="ml-2 text-gray-400 hover:text-accent-blue"><i class="fas fa-linkedin"></i></a>` : ''}
+                            ${company.company_linkedin ? `<a href="${company.company_linkedin}" target="_blank" class="ml-2 px-1.5 py-0.5 bg-[#0A66C2] hover:bg-[#0e76e3] text-white rounded text-xs font-semibold inline-flex items-center"><i class="fab fa-linkedin-in mr-1"></i>Company</a>` : ''}
                         </div>
                         <div class="text-sm text-gray-400">${company.description || ''}</div>
                         
@@ -697,7 +697,7 @@ function renderFounders(founders) {
         return `
             <div class="mb-1">
                 <span class="text-gray-300">${founder.name}</span>
-                ${founder.linkedin ? `<a href="${founder.linkedin}" target="_blank" class="ml-1 text-gray-400 hover:text-accent-blue"><i class="fas fa-linkedin"></i></a>` : ''}
+                ${founder.linkedin ? `<a href="${founder.linkedin}" target="_blank" class="ml-1 px-1.5 py-0.5 bg-[#0A66C2] hover:bg-[#0e76e3] text-white rounded text-xs font-semibold inline-flex items-center"><i class="fab fa-linkedin-in mr-1"></i>Profile</a>` : ''}
             </div>
         `;
     }).join('');
