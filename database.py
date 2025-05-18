@@ -74,6 +74,15 @@ def initialize_db(companies_data):
     
     # Add companies to database
     for company_data in companies_data:
+        # Special handling for GroundControl to fix founder display issue
+        if company_data['name'] == 'GroundControl' and not company_data.get('founders'):
+            # Manually add founders for GroundControl if missing
+            company_data['founders'] = [
+                {'name': 'Matthew Noseworthy', 'linkedin': 'https://www.linkedin.com/in/matthew-noseworthy-218167106/'},
+                {'name': 'Mehul Shah', 'linkedin': 'https://www.linkedin.com/in/mehulmshah22'},
+                {'name': 'Nick Warren', 'linkedin': 'https://www.linkedin.com/in/nickcw/'}
+            ]
+        
         # Convert founders list to JSON string
         founders_json = json.dumps(company_data.get('founders', []))
         
