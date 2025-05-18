@@ -228,16 +228,18 @@
                             </td>
                             <td class="px-2 py-2 whitespace-nowrap">
                                 <div class="text-xs text-gray-400">
+                                    <ul style="list-style-type: none; margin: 0; padding: 0;">
                                     {% for founder in company.founders %}
-                                    <div class="mb-0.5 flex items-center">
-                                        <span class="text-gray-300">{{ founder.name }}</span>
-                                        {% if founder.linkedin %}
-                                        <a href="{{ founder.linkedin }}" target="_blank" class="ml-1 text-blue-500 hover:text-blue-400 transition-colors duration-200 flex-shrink-0">
-                                            <span class="bg-blue-900 text-blue-100 px-1 py-0 rounded text-xs font-semibold">LinkedIn</span>
-                                        </a>
-                                        {% endif %}
-                                    </div>
+                                        <li class="mb-0.5 flex items-center">
+                                            <span class="text-gray-300">{{ founder.name }}</span>
+                                            {% if founder.linkedin %}
+                                            <a href="{{ founder.linkedin }}" target="_blank" class="ml-1 text-blue-500 hover:text-blue-400 transition-colors duration-200 flex-shrink-0">
+                                                <span class="bg-blue-900 text-blue-100 px-1 py-0 rounded text-xs font-semibold">LinkedIn</span>
+                                            </a>
+                                            {% endif %}
+                                        </li>
                                     {% endfor %}
+                                    </ul>
                                 </div>
                                 
                                 <!-- Company Tags -->
