@@ -233,8 +233,14 @@ async def upvote(request: Request, company_id: int, db: Session = Depends(get_db
         except:
             current_rank = 0
     
-    # Increment rank (worse rank)
-    new_rank = current_rank + 1
+    # Handle initial rank of 0 (unranked)
+    if current_rank == 0:
+        # Start at rank 2 for previously unranked companies
+        # (since downranking means a higher number)
+        new_rank = 2
+    else:
+        # Normal case: decrease rank by increasing number
+        new_rank = current_rank + 1
     
     # Update the database
     db.query(DBCompany).filter(DBCompany.id == company_id).update({"votes": new_rank})
@@ -254,7 +260,7 @@ async def upvote(request: Request, company_id: int, db: Session = Depends(get_db
 
 @app.post("/downvote/{company_id}")
 async def downvote(request: Request, company_id: int, db: Session = Depends(get_db)):
-    """Downvote a company"""
+    """Downvote a company (which improves its rank)"""
     # Find the company in the database
     company = get_company_by_id(db, company_id)
     if not company:
@@ -268,14 +274,20 @@ async def downvote(request: Request, company_id: int, db: Session = Depends(get_
         except:
             current_rank = 0
     
-    # Don't allow ranks below 1 (1 is the highest rank)
-    if current_rank > 1:
+    # Handle cases where rank starts at 0 (unranked)
+    if current_rank == 0:
+        # Set to rank 1 (best rank) for previously unranked companies
+        new_rank = 1
+    elif current_rank > 1:
+        # Normal case: improve rank by decreasing number
         new_rank = current_rank - 1
-        # Update the database
-        db.query(DBCompany).filter(DBCompany.id == company_id).update({"votes": new_rank})
-        db.commit()
     else:
-        new_rank = 1  # Minimum rank is 1
+        # Already at rank 1, can't go higher
+        new_rank = 1
+    
+    # Update the database with the new rank
+    db.query(DBCompany).filter(DBCompany.id == company_id).update({"votes": new_rank})
+    db.commit()
     
     # Check if it's an AJAX request or a regular form submission
     is_ajax = request.headers.get("accept") == "application/json"
