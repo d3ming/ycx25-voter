@@ -72,13 +72,17 @@ def process_csv_data():
             
             # Skip company descriptions that sometimes appear in founder fields
             description_keywords = ["Open-Source", "Faster", "The Co-Pilot", "Vision-first", 
-                                   "AI that", "Optimize", "for", "Co-Pilot", "founded", "inc"]
+                                   "AI that", "Optimize", "for", "Co-Pilot", "founded", "inc",
+                                   "Vertical AI", "Open Source"]
                                    
             # Check if this is an actual founder name and not a description
             is_description = False
             if not isinstance(founder_name, str):
                 is_description = True
             elif founder_name == company_name:
+                is_description = True
+            # Check if the name looks like a real name (has spaces but isn't too long)
+            elif isinstance(founder_name, str) and (len(founder_name) > 50 or " " not in founder_name):
                 is_description = True
             else:
                 for keyword in description_keywords:
