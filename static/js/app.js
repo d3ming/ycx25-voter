@@ -1,11 +1,13 @@
 // Function to handle voting through AJAX
-async function handleVote(companyName, voteType) {
+async function handleVote(companyId, voteType) {
     try {
+        console.log(`Sending vote to endpoint: /${voteType}vote/${companyId} for company: ${companyId}`);
+        
         // Determine the endpoint based on vote type
-        const endpoint = voteType === 'up' ? `/upvote/${companyName}` : `/downvote/${companyName}`;
+        const endpoint = voteType === 'up' ? `/upvote/${companyId}` : `/downvote/${companyId}`;
         
         // Get the current vote count element
-        const voteDisplayElement = document.getElementById(`voteDisplay${companyName.replace(/\s+/g, '')}`);
+        const voteDisplayElement = document.getElementById(`voteDisplay${companyId}`);
         
         // Make API call
         const response = await fetch(endpoint, {
@@ -37,14 +39,14 @@ async function handleVote(companyName, voteType) {
 }
 
 // Function to handle manual vote setting
-async function submitVote(companyName) {
+async function submitVote(companyId) {
     try {
-        const voteInput = document.getElementById(`voteInput${companyName}`);
+        const voteInput = document.getElementById(`voteInput${companyId}`);
         const voteValue = parseInt(voteInput.value, 10);
-        const voteDisplay = document.getElementById(`voteDisplay${companyName}`);
+        const voteDisplay = document.getElementById(`voteDisplay${companyId}`);
         
         // Make API call to update rank
-        const response = await fetch(`/update_rank/${companyName}`, {
+        const response = await fetch(`/update_rank/${companyId}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded',
@@ -62,7 +64,7 @@ async function submitVote(companyName) {
             
             // Hide input, show display
             voteDisplay.classList.remove('hidden');
-            document.getElementById(`voteForm${companyName}`).classList.add('hidden');
+            document.getElementById(`voteForm${companyId}`).classList.add('hidden');
             
             // Flash effect
             voteDisplay.classList.add('vote-updated');
