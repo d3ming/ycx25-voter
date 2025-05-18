@@ -3,6 +3,10 @@ async function handleRank(companyId, rankType) {
     try {
         // Get the current rank element
         const rankDisplayElement = document.getElementById(`voteDisplay${companyId}`);
+        if (!rankDisplayElement) {
+            console.error('Could not find rank display element', companyId);
+            return;
+        }
         
         // Get current rank value
         const currentRank = parseInt(rankDisplayElement.textContent || '0', 10);
@@ -40,30 +44,37 @@ async function handleRank(companyId, rankType) {
         }, 500);
         
         // Determine the endpoint based on rank change type
-        // We'll reuse the upvote/downvote endpoints but with inverted logic
-        // Since lower rank is better, promote = downvote and demote = upvote
         const endpoint = rankType === 'promote' ? `/downvote/${companyId}` : `/upvote/${companyId}`;
         
-        // Make API call in background
+        // Create FormData for the request
+        const formData = new FormData();
+        
+        // Make API call using standard form submission (not JSON)
         const response = await fetch(endpoint, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
                 'Accept': 'application/json'
-            }
+            },
+            // Empty body is fine, the endpoint only needs the company ID from the URL
+            body: formData
         });
         
         if (response.ok) {
-            // Get the actual updated rank from server
-            const data = await response.json();
-            
-            // Update to server value (only if different from our optimistic update)
-            if (data.votes !== newRank) {
-                rankDisplayElement.textContent = data.votes;
+            try {
+                // Get the actual updated rank from server
+                const data = await response.json();
+                
+                // Update to server value (only if different from our optimistic update)
+                if (data.votes !== newRank) {
+                    rankDisplayElement.textContent = data.votes;
+                }
+                
+                // Refresh the table to update the sorting order without page refresh
+                fetchAndUpdateCompanies();
+            } catch (jsonError) {
+                console.error('Error parsing JSON response:', jsonError);
+                // Keep the optimistic update
             }
-            
-            // Refresh the table to update the sorting order without page refresh
-            fetchAndUpdateCompanies();
         } else {
             // If there was an error, rollback to original value
             console.error('Error updating rank:', response.statusText);
