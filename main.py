@@ -278,10 +278,23 @@ async def api_companies(request: Request, db: Session = Depends(get_db)):
     # Get companies from database
     companies = get_companies_from_db(db)
     
-    # Sort companies first by tier (A,B,C,D) and then by rank (lowest first - 1 is the highest rank)
+    # Define a helper function to determine tier order safely
+    def get_tier_index(tier):
+        if tier == 'A': 
+            return 0
+        elif tier == 'B':
+            return 1
+        elif tier == 'C':
+            return 2
+        elif tier == 'D':
+            return 3
+        else:
+            return 3  # Default to D if tier not recognized
+    
+    # Sort companies first by tier (A,B,C,D) and then by rank (lowest first)
     sorted_companies = sorted(companies, key=lambda x: (
         # Tier sorting (A,B,C,D)
-        'ABCD'.index(x['tier']) if x['tier'] in 'ABCD' else 3,  # Default to C (index 2) if tier not valid
+        get_tier_index(x['tier']),
         # Rank sorting (1,2,3...)
         x['rank'] if x['rank'] > 0 else float('inf')
     ))
