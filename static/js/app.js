@@ -571,14 +571,15 @@ function renderFounders(founders) {
         return '<span class="text-gray-500">No founder info</span>';
     }
     
-    return founders.map(founder => {
+    // Create list of founder elements without any separator between them
+    let founderElements = founders.map(founder => {
         if (typeof founder === 'object' && founder !== null) {
             const founderName = founder.name || 'Unknown';
             const linkedin = founder.linkedin || null;
             
             if (linkedin) {
                 return `
-                    <div class="flex items-center">
+                    <div class="flex items-center mb-1">
                         <span class="text-sm text-gray-300">${founderName}</span>
                         <a href="${linkedin}" target="_blank" class="ml-2 text-blue-500 hover:text-blue-400 transition-colors duration-200">
                             <i class="fab fa-linkedin text-xs"></i>
@@ -586,10 +587,10 @@ function renderFounders(founders) {
                     </div>
                 `;
             } else {
-                return `<span class="text-sm text-gray-300">${founderName}</span>`;
+                return `<div class="mb-1"><span class="text-sm text-gray-300">${founderName}</span></div>`;
             }
         } else if (typeof founder === 'string') {
-            return `<span class="text-sm text-gray-300">${founder}</span>`;
+            return `<div class="mb-1"><span class="text-sm text-gray-300">${founder}</span></div>`;
         }
         
         return '';
