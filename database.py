@@ -30,12 +30,10 @@ class Company(Base):
     def to_dict(self):
         """Convert company to dictionary for API responses"""
         try:
-            if self.founders:
-                founders_str = str(self.founders)
-                if founders_str.startswith('[') and founders_str.endswith(']'):
-                    founders = json.loads(founders_str)
-                else:
-                    founders = []
+            # Fixed to avoid SQLAlchemy boolean evaluation error
+            founders_str = str(self.founders) if self.founders is not None else None
+            if founders_str and founders_str.startswith('[') and founders_str.endswith(']'):
+                founders = json.loads(founders_str)
             else:
                 founders = []
         except:
