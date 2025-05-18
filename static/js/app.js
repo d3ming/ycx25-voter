@@ -571,31 +571,23 @@ function renderFounders(founders) {
         return '<span class="text-gray-500">No founder info</span>';
     }
     
-    // Create a cleaner HTML structure for the founders list
-    let html = '<div class="founder-list">';
-    
-    founders.forEach(founder => {
-        if (typeof founder === 'object' && founder !== null) {
-            const founderName = founder.name || 'Unknown';
-            const linkedin = founder.linkedin || null;
-            
-            html += '<div class="flex items-center mb-1">';
-            html += `<span class="text-sm text-gray-300">${founderName}</span>`;
-            
-            if (linkedin) {
-                html += `
-                    <a href="${linkedin}" target="_blank" class="ml-2 text-blue-500 hover:text-blue-400 transition-colors duration-200">
+    // Simply create an unordered list without bullets or periods
+    return `<div class="founder-list" style="list-style-type: none; padding-left: 0;">
+        ${founders.map(founder => {
+            if (typeof founder === 'object' && founder !== null) {
+                const founderName = founder.name || 'Unknown';
+                const linkedin = founder.linkedin || null;
+                
+                return `<div class="flex items-center mb-1">
+                    <span class="text-sm text-gray-300">${founderName}</span>
+                    ${linkedin ? `<a href="${linkedin}" target="_blank" class="ml-2 text-blue-500 hover:text-blue-400 transition-colors duration-200">
                         <i class="fab fa-linkedin text-xs"></i>
-                    </a>
-                `;
+                    </a>` : ''}
+                </div>`;
             }
-            
-            html += '</div>';
-        }
-    });
-    
-    html += '</div>';
-    return html;
+            return '';
+        }).join('')}
+    </div>`;
 }
 
 // Helper function to render tags
