@@ -673,8 +673,6 @@ function searchAndFilterCompanies(query = '', tags = '', tier = '') {
                         ${renderFounders(company.founders)}
                     </div>
                 </td>
-                <td class="px-3 py-3 text-sm text-gray-400">${company.founded_year || ''}</td>
-                <td class="px-3 py-3 text-sm text-gray-400">${company.location || ''}</td>
             `;
             
             tableBody.appendChild(row);
