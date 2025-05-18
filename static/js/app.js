@@ -433,11 +433,7 @@ function renderCompanyRows(companies, tableBody) {
                     <div class="text-xs text-gray-500 mt-1">${company.short_description || ''}</div>
                 </div>
             </td>
-            <td class="px-3 py-3">
-                <div class="text-sm text-gray-300">
-                    ${company.description ? company.description : 'No description available'}
-                </div>
-            </td>
+
             <td class="px-3 py-3 whitespace-nowrap">
                 <div class="flex flex-col space-y-1">
                     ${renderFounders(company.founders)}
