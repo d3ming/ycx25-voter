@@ -359,7 +359,24 @@ function searchAndFilterCompanies(query = '', tags = '') {
         }
         
         // Filter by tag
-        const tagMatch = !tags || (company.tags && company.tags.includes(tags));
+        let tagMatch = true;
+        if (tags) {
+            tagMatch = false;
+            // Parse tags if they're stored as a JSON string
+            if (company.tags) {
+                let companyTags = company.tags;
+                if (typeof company.tags === 'string') {
+                    try {
+                        companyTags = JSON.parse(company.tags);
+                    } catch (e) {
+                        console.error('Error parsing tags:', e);
+                        companyTags = [];
+                    }
+                }
+                // Check if the selected tag is in the company's tags
+                tagMatch = Array.isArray(companyTags) && companyTags.includes(tags);
+            }
+        }
         
         // Include if matches any criteria
         return nameMatch || founderMatch || tagMatch;
@@ -528,17 +545,10 @@ async function fetchAndUpdateCompanies() {
         // Save current scroll position
         const scrollPosition = window.pageYOffset || document.documentElement.scrollTop;
         
-        // Fetch the updated companies data
-        const response = await fetch('/api/companies', {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/json'
-            }
-        });
+        // Load all companies data for client-side filtering
+        await loadAllCompaniesData();
         
-        if (response.ok) {
-            const companiesData = await response.json();
-            
+        if (allCompaniesData.length > 0) {
             // Get the table body
             const tableBody = document.querySelector('tbody');
             
