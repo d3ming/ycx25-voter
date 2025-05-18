@@ -22,7 +22,8 @@ class Company(Base):
     website = Column(String)
     company_linkedin = Column(String, nullable=True)
     founders = Column(Text)  # Store as JSON string
-    votes = Column(Integer, default=0)
+    votes = Column(Integer, default=0)  # Used for ranking
+    tier = Column(String, default='C')  # Tier: A, B, C, D (A is best)
     founded_year = Column(String)
     location = Column(String)
     short_description = Column(Text, nullable=True)
@@ -49,6 +50,7 @@ class Company(Base):
             "founders": founders,
             "rank": self.votes,  # Keep 'rank' for backward compatibility
             "votes": self.votes,  # Add votes field for consistency
+            "tier": self.tier,    # Company tier (A, B, C, D)
             "founded_year": self.founded_year,
             "location": self.location,
             "short_description": self.short_description

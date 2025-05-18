@@ -142,8 +142,13 @@ async def home(request: Request, db: Session = Depends(get_db)):
     # Get companies from database
     companies = get_companies_from_db(db)
     
-    # Sort companies by rank (lowest first - 1 is the highest rank)
-    sorted_companies = sorted(companies, key=lambda x: x['rank'] if x['rank'] > 0 else float('inf'))
+    # Sort companies first by tier (A,B,C,D) and then by rank (lowest first - 1 is the highest rank)
+    sorted_companies = sorted(companies, key=lambda x: (
+        # Tier sorting (A,B,C,D)
+        'ABCD'.index(x['tier']) if x['tier'] in 'ABCD' else 3,  # Default to C (index 2) if tier not valid
+        # Rank sorting (1,2,3...)
+        x['rank'] if x['rank'] > 0 else float('inf')
+    ))
     
     return templates.TemplateResponse(
         "index.html", 
@@ -227,6 +232,40 @@ async def downvote(request: Request, company_id: int, db: Session = Depends(get_
         return JSONResponse({
             "success": True,
             "votes": company.votes,
+            "company_id": company_id
+        })
+    else:
+        return RedirectResponse(url="/", status_code=303)
+
+# API endpoint to update a company's tier
+@app.post("/update_tier/{company_id}")
+async def update_tier(
+    request: Request,
+    company_id: int, 
+    tier: str = Form(...), 
+    db: Session = Depends(get_db)
+):
+    """Update tier for a company"""
+    # Find the company in the database
+    company = get_company_by_id(db, company_id)
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+    
+    # Validate tier
+    if tier not in ['A', 'B', 'C', 'D']:
+        raise HTTPException(status_code=422, detail="Invalid tier. Must be A, B, C, or D")
+    
+    # Update tier
+    company.tier = tier
+    db.commit()
+    
+    # Check if it's an AJAX request or a regular form submission
+    is_ajax = request.headers.get("accept") == "application/json"
+    
+    if is_ajax:
+        return JSONResponse({
+            "success": True,
+            "tier": company.tier,
             "company_id": company_id
         })
     else:

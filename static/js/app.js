@@ -157,3 +157,54 @@ function handleEnterKey(event, companyId) {
 function handleVoteBlur(companyId) {
     submitVote(companyId);
 }
+
+// Function to handle tier changes
+async function handleTierChange(companyId, tier) {
+    try {
+        // Get the select element
+        const tierSelect = document.getElementById(`tierSelect${companyId}`);
+        
+        // Store original tier value in case of error
+        const originalTier = tierSelect.getAttribute('data-original-tier') || tier;
+        
+        // Apply visual feedback
+        tierSelect.classList.add('bg-accent-blue');
+        setTimeout(() => {
+            tierSelect.classList.remove('bg-accent-blue');
+        }, 500);
+        
+        // Make API call to update tier
+        const response = await fetch(`/update_tier/${companyId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Accept': 'application/json'
+            },
+            body: `tier=${tier}`
+        });
+        
+        if (response.ok) {
+            // Get updated data
+            const data = await response.json();
+            
+            // Store the new tier as the original for future reference
+            tierSelect.setAttribute('data-original-tier', data.tier);
+            
+            // Refresh the page to update sorting
+            window.location.reload();
+        } else {
+            console.error('Error updating tier:', response.statusText);
+            
+            // Revert to original tier
+            tierSelect.value = originalTier;
+            
+            // Show error
+            tierSelect.classList.add('bg-accent-red');
+            setTimeout(() => {
+                tierSelect.classList.remove('bg-accent-red');
+            }, 500);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
