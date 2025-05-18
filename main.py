@@ -78,25 +78,49 @@ def process_csv_data():
         if is_founder:
             founder_name = row['Founder Name']
             
-            # Skip company descriptions that sometimes appear in founder fields
-            description_keywords = ["Open-Source", "Faster", "The Co-Pilot", "Vision-first", 
-                                   "AI that", "Optimize", "for", "Co-Pilot", "founded", "inc",
-                                   "Vertical AI", "Open Source"]
+            # Expanded list of keywords that indicate this is a description, not a founder
+            description_keywords = [
+                "Open-Source", "Faster", "The Co-Pilot", "Vision-first", 
+                "AI that", "Optimize", "for", "Co-Pilot", "founded", "inc",
+                "Vertical AI", "Open Source", "Platform", "Software", 
+                "Troubleshoot", "Powering", "future", "monitor", "control",
+                "optimize", "Modern", "Free", "Built", "Designed",
+                "Tool", "Solution", "Service", "System", "Framework",
+                "App", "Application", "Product", "Helps", "Enabling", 
+                "Leading", "Building", "Agent", "Analytics", "Management",
+                "Automation", "Infrastructure", "Cloud", "Data", "Network",
+                "Security", "Technology", "Healthcare", "Financial", 
+                "Engine", "Protocol", "Marketplace", "Factory", "Workflow",
+                "Device", "Mobile", "Desktop", "Web", "Internet", 
+                "Digital", "Virtual", "Reality", "Artificial", "Intelligence"
+            ]
                                    
             # Check if this is an actual founder name and not a description
             is_description = False
+            
+            # If it's not a string, it's not a valid founder name
             if not isinstance(founder_name, str):
                 is_description = True
+            # Skip if the founder name is the same as the company name
             elif founder_name == company_name:
                 is_description = True
-            # Check if the name looks like a real name (has spaces but isn't too long)
-            elif isinstance(founder_name, str) and (len(founder_name) > 50 or " " not in founder_name):
+            # Skip if the founder name is part of the company description
+            elif isinstance(founder_name, str) and founder_name in companies[company_name]['description']:
                 is_description = True
+            # Check if the name is too long or doesn't contain a space (probably not a person's name)
+            elif isinstance(founder_name, str) and (len(founder_name) > 40 or " " not in founder_name):
+                is_description = True
+            # Check if the name contains any description keywords
             else:
                 for keyword in description_keywords:
                     if isinstance(founder_name, str) and keyword in founder_name:
                         is_description = True
                         break
+                        
+            # Check if the founder name is just the first part of a company description
+            # (sometimes the first phrase of a description appears as a founder)
+            if not is_description and isinstance(founder_name, str) and companies[company_name]['description'].startswith(founder_name):
+                is_description = True
             
             # Only add if it's an actual founder and not already in the list
             if (not is_description and 
@@ -157,6 +181,38 @@ async def startup_event():
     
     # Initialize database with company data
     initialize_db(companies_data)
+    
+# Add a utility route to reset and reload the database (for maintenance and testing)
+@app.get("/admin/reset-and-reload")
+async def reset_and_reload(request: Request, confirmation: str = ""):
+    """
+    Admin utility to reset and reload the database with corrected data
+    Must provide confirmation=yes as a query parameter
+    """
+    # Require a confirmation parameter for safety
+    if confirmation != "yes":
+        return {"success": False, "message": "Confirmation required. Add ?confirmation=yes to URL to proceed."}
+    
+    # Reset and reload database
+    from database import get_db, Company
+    
+    db = next(get_db())
+    try:
+        # Drop all company records
+        db.query(Company).delete()
+        db.commit()
+        
+        # Reload with corrected data
+        companies_data = process_csv_data()
+        from database import initialize_db
+        initialize_db(companies_data)
+        
+        return {"success": True, "message": "Database reset and reloaded successfully with corrected founders data."}
+    except Exception as e:
+        db.rollback()
+        return {"success": False, "message": f"Error: {str(e)}"}
+    finally:
+        db.close()
 
 @app.get("/")
 async def home(request: Request, db: Session = Depends(get_db)):
