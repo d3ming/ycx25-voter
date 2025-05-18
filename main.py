@@ -59,15 +59,23 @@ def process_csv_data():
             }
         
         # Process founder data
-        # Check for founder titles including more variations that appear in the data
-        founder_titles = ['Founder', 'Co-Founder', 'CEO', 'Co-Founder & CEO', 'Co-Founder & CTO', 
-                         'CTO & Co-Founder', 'CEO & Co-Founder', 'COO & Co-Founder', 
-                         'CTO & Co-founder', 'CEO & Co-founder', 'COO & Co-founder']
-        # Handle founder entries with titles containing "Founder" or "founder" anywhere in the title
-        if (row['Founder Title'] in founder_titles or 
-            (isinstance(row['Founder Title'], str) and 
-             ('Founder' in row['Founder Title'] or 'founder' in row['Founder Title'] or 
-              'CEO' in row['Founder Title'] or 'CTO' in row['Founder Title'] or 'COO' in row['Founder Title']))):
+        # Manual fix for GroundControl company to ensure its founders are included
+        if (company_name == 'GroundControl' and 
+            isinstance(row['Founder Name'], str) and 
+            row['Founder Name'] in ['Matthew Noseworthy', 'Mehul Shah', 'Nick Warren']):
+            is_founder = True
+        else:
+            # Check for founder titles including more variations that appear in the data
+            founder_titles = ['Founder', 'Co-Founder', 'CEO', 'Co-Founder & CEO', 'Co-Founder & CTO', 
+                             'CTO & Co-Founder', 'CEO & Co-Founder', 'COO & Co-Founder', 
+                             'CTO & Co-founder', 'CEO & Co-founder', 'COO & Co-founder']
+            # Handle founder entries with titles containing "Founder" or "founder" anywhere in the title
+            is_founder = (row['Founder Title'] in founder_titles or 
+                (isinstance(row['Founder Title'], str) and 
+                 ('Founder' in row['Founder Title'] or 'founder' in row['Founder Title'] or 
+                  'CEO' in row['Founder Title'] or 'CTO' in row['Founder Title'] or 'COO' in row['Founder Title'])))
+                  
+        if is_founder:
             founder_name = row['Founder Name']
             
             # Skip company descriptions that sometimes appear in founder fields
