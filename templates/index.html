@@ -143,16 +143,16 @@
                             <td class="px-3 py-3 whitespace-nowrap">
                                 <div class="flex items-center space-x-2">
                                     <div class="flex items-center">
-                                        <div id="voteForm{{ company.name | replace(' ', '') }}" class="hidden">
-                                            <input type="number" id="voteInput{{ company.name | replace(' ', '') }}" class="vote-input w-16 text-sm px-2 py-1 bg-dark-accent text-gray-200 border border-accent-blue rounded-md focus:outline-none focus:ring-1 focus:ring-accent-blue" value="{{ company.rank }}" onblur="handleVoteBlur('{{ company.name | replace(' ', '') }}')" onkeydown="handleEnterKey(event, '{{ company.name | replace(' ', '') }}')">
+                                        <div id="voteForm{{ company.id }}" class="hidden">
+                                            <input type="number" id="voteInput{{ company.id }}" class="vote-input w-16 text-sm px-2 py-1 bg-dark-accent text-gray-200 border border-accent-blue rounded-md focus:outline-none focus:ring-1 focus:ring-accent-blue" value="{{ company.rank }}" onblur="handleVoteBlur('{{ company.id }}')" onkeydown="handleEnterKey(event, '{{ company.id }}')">
                                         </div>
-                                        <span id="voteDisplay{{ company.name | replace(' ', '') }}" class="font-semibold text-xl text-gray-200 cursor-pointer hover:text-accent-blue transition-colors duration-200" onclick="showVoteInput('{{ company.name | replace(' ', '') }}')">{{ company.rank }}</span>
+                                        <span id="voteDisplay{{ company.id }}" class="font-semibold text-xl text-gray-200 cursor-pointer hover:text-accent-blue transition-colors duration-200" onclick="showVoteInput('{{ company.id }}')">{{ company.rank }}</span>
                                     </div>
                                     <div class="flex flex-col space-y-1 ml-2">
-                                        <button onclick="handleVote('{{ company.name | replace(' ', '') }}', 'up')" class="text-gray-400 hover:text-accent-green focus:outline-none transition-colors duration-200" title="Upvote">
+                                        <button onclick="handleVote('{{ company.id }}', 'up')" class="text-gray-400 hover:text-accent-green focus:outline-none transition-colors duration-200" title="Upvote">
                                             <i class="fas fa-arrow-up text-sm"></i>
                                         </button>
-                                        <button onclick="handleVote('{{ company.name | replace(' ', '') }}', 'down')" class="text-gray-400 hover:text-accent-red focus:outline-none transition-colors duration-200" title="Downvote">
+                                        <button onclick="handleVote('{{ company.id }}', 'down')" class="text-gray-400 hover:text-accent-red focus:outline-none transition-colors duration-200" title="Downvote">
                                             <i class="fas fa-arrow-down text-sm"></i>
                                         </button>
                                     </div>
