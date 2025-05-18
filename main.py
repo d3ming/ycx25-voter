@@ -255,8 +255,8 @@ async def update_tier(
     if tier not in ['A', 'B', 'C', 'D']:
         raise HTTPException(status_code=422, detail="Invalid tier. Must be A, B, C, or D")
     
-    # Update tier
-    company.tier = tier
+    # Update tier using setattr (to avoid SQLAlchemy typing issues)
+    setattr(company, 'tier', tier)
     db.commit()
     
     # Check if it's an AJAX request or a regular form submission
