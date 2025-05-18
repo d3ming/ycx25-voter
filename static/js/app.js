@@ -664,10 +664,10 @@ function searchAndFilterCompanies(query = '', tags = '', tier = '') {
                     <div class="flex flex-col">
                         <div class="flex items-center">
                             <a href="${company.website || '#'}" target="_blank" class="text-accent-blue hover:underline font-medium">${company.name}</a>
-                            ${company.company_linkedin ? `<a href="${company.company_linkedin}" target="_blank" class="ml-2 px-1.5 py-0.5 bg-[#0A66C2] hover:bg-[#0e76e3] text-white rounded text-xs font-semibold inline-flex items-center">
-                                <svg class="w-3 h-3 mr-1 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+                            ${company.company_linkedin ? `<a href="${company.company_linkedin}" target="_blank" class="ml-2 px-1 py-0.5 bg-[#0A66C2] hover:bg-[#0e76e3] text-white rounded text-xs inline-flex items-center">
+                                <svg class="w-3 h-3 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
                                     <path d="M416 32H31.9C14.3 32 0 46.5 0 64.3v383.4C0 465.5 14.3 480 31.9 480H416c17.6 0 32-14.5 32-32.3V64.3c0-17.8-14.4-32.3-32-32.3zM135.4 416H69V202.2h66.5V416zm-33.2-243c-21.3 0-38.5-17.3-38.5-38.5S80.9 96 102.2 96c21.2 0 38.5 17.3 38.5 38.5 0 21.3-17.2 38.5-38.5 38.5zm282.1 243h-66.4V312c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9V416h-66.4V202.2h63.7v29.2h.9c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9V416z"/>
-                                </svg>Company</a>` : ''}
+                                </svg></a>` : ''}
                         </div>
                         <div class="text-sm text-gray-400">${company.description || ''}</div>
                         
@@ -700,10 +700,10 @@ function renderFounders(founders) {
         return `
             <div class="mb-1">
                 <span class="text-gray-300">${founder.name}</span>
-                ${founder.linkedin ? `<a href="${founder.linkedin}" target="_blank" class="ml-1 px-1.5 py-0.5 bg-[#0A66C2] hover:bg-[#0e76e3] text-white rounded text-xs font-semibold inline-flex items-center">
-                        <svg class="w-3 h-3 mr-1 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+                ${founder.linkedin ? `<a href="${founder.linkedin}" target="_blank" class="ml-1 px-1 py-0.5 bg-[#0A66C2] hover:bg-[#0e76e3] text-white rounded text-xs inline-flex items-center">
+                        <svg class="w-3 h-3 fill-current" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
                             <path d="M416 32H31.9C14.3 32 0 46.5 0 64.3v383.4C0 465.5 14.3 480 31.9 480H416c17.6 0 32-14.5 32-32.3V64.3c0-17.8-14.4-32.3-32-32.3zM135.4 416H69V202.2h66.5V416zm-33.2-243c-21.3 0-38.5-17.3-38.5-38.5S80.9 96 102.2 96c21.2 0 38.5 17.3 38.5 38.5 0 21.3-17.2 38.5-38.5 38.5zm282.1 243h-66.4V312c0-24.8-.5-56.7-34.5-56.7-34.6 0-39.9 27-39.9 54.9V416h-66.4V202.2h63.7v29.2h.9c8.9-16.8 30.6-34.5 62.9-34.5 67.2 0 79.7 44.3 79.7 101.9V416z"/>
-                        </svg>Profile</a>` : ''}
+                        </svg></a>` : ''}
             </div>
         `;
     }).join('');
