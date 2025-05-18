@@ -61,8 +61,13 @@ def process_csv_data():
         # Process founder data
         # Check for founder titles including more variations that appear in the data
         founder_titles = ['Founder', 'Co-Founder', 'CEO', 'Co-Founder & CEO', 'Co-Founder & CTO', 
-                         'CTO & Co-Founder', 'CEO & Co-Founder', 'COO & Co-Founder']
-        if row['Founder Title'] in founder_titles:
+                         'CTO & Co-Founder', 'CEO & Co-Founder', 'COO & Co-Founder', 
+                         'CTO & Co-founder', 'CEO & Co-founder', 'COO & Co-founder']
+        # Handle founder entries with titles containing "Founder" or "founder" anywhere in the title
+        if (row['Founder Title'] in founder_titles or 
+            (isinstance(row['Founder Title'], str) and 
+             ('Founder' in row['Founder Title'] or 'founder' in row['Founder Title'] or 
+              'CEO' in row['Founder Title'] or 'CTO' in row['Founder Title'] or 'COO' in row['Founder Title']))):
             founder_name = row['Founder Name']
             
             # Skip company descriptions that sometimes appear in founder fields
